@@ -1,5 +1,6 @@
 {
   "name": "personal-finance",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.33.0",
@@ -10,7 +11,9 @@
     "lint": "turbo run lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s",
+    "version": "pnpm changelog && git add CHANGELOG.md"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
@@ -24,6 +27,7 @@
   "devDependencies": {
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
+    "conventional-changelog": "^7.2.0",
     "eslint": "^10.1.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",

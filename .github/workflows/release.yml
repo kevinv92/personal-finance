@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump type"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version and generate changelog
+        run: |
+          pnpm version ${{ inputs.bump }} --no-git-tag-version
+          pnpm changelog
+          VERSION=$(node -p 'require("./package.json").version')
+          git add -A
+          git commit -m "release: v${VERSION}"
+          git tag "v${VERSION}"
+
+      - name: Push tag and commit
+        run: git push && git push --tags
+
+      - name: Extract changelog for this release
+        id: changelog
+        run: |
+          VERSION=$(node -p 'require("./package.json").version')
+          # Extract the section for this version from CHANGELOG.md
+          BODY=$(awk "/^## .*${VERSION}/,/^## /" CHANGELOG.md | head -n -1)
+          echo "body<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$BODY" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p 'require("./package.json").version')
+          gh release create "v${VERSION}" \
+            --title "v${VERSION}" \
+            --notes "${{ steps.changelog.outputs.body }}"

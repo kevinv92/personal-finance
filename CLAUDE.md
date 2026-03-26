@@ -72,7 +72,7 @@ TBD
 
 ## Architecture Decisions
 
-TBD
+Refer to `docs/adr/` for all architecture decision records. Read these before suggesting changes to the tech stack or project structure.
 
 ## Common Pitfalls
 

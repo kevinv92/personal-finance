@@ -6,14 +6,22 @@
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
     "test": "vitest run",
-    "lint": "eslint . && tsc --noEmit"
+    "lint": "eslint . && tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "tsx src/db/seed.ts",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "drizzle-orm": "^0.45.1",
     "fastify": "^5"
   },
   "devDependencies": {
     "@personal-finance/eslint-config": "workspace:*",
     "@personal-finance/tsconfig": "workspace:*",
+    "@types/better-sqlite3": "^7.6.13",
+    "drizzle-kit": "^0.31.10",
     "tsx": "^4",
     "typescript": "^5",
     "vitest": "^3"

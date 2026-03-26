@@ -9,9 +9,13 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4.2.2",
+    "@tanstack/react-query": "^5.95.2",
     "next": "^15",
+    "postcss": "^8.5.8",
     "react": "^19",
-    "react-dom": "^19"
+    "react-dom": "^19",
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
     "@personal-finance/eslint-config": "workspace:*",

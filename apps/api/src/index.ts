@@ -1,4 +1,5 @@
 import Fastify from "fastify";
+import cors from "@fastify/cors";
 import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
 import {
@@ -18,6 +19,8 @@ const server = Fastify({ logger: true });
 
 server.setValidatorCompiler(validatorCompiler);
 server.setSerializerCompiler(serializerCompiler);
+
+await server.register(cors, { origin: true });
 
 await server.register(fastifySwagger, {
   openapi: {

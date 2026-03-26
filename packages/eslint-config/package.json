@@ -1,0 +1,15 @@
+{
+  "name": "@personal-finance/eslint-config",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./base": "./base.js",
+    "./next": "./next.js"
+  },
+  "dependencies": {
+    "typescript-eslint": "^8"
+  },
+  "peerDependencies": {
+    "eslint": "^10"
+  }
+}

@@ -6,7 +6,7 @@
     "build": "next build",
     "dev": "next dev --port 3000",
     "test": "vitest run",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
     "next": "^15",
@@ -14,6 +14,7 @@
     "react-dom": "^19"
   },
   "devDependencies": {
+    "@personal-finance/eslint-config": "workspace:*",
     "@personal-finance/tsconfig": "workspace:*",
     "@types/react": "^19",
     "@types/react-dom": "^19",

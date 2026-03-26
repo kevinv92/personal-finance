@@ -6,12 +6,13 @@
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
     "test": "vitest run",
-    "lint": "tsc --noEmit"
+    "lint": "eslint . && tsc --noEmit"
   },
   "dependencies": {
     "fastify": "^5"
   },
   "devDependencies": {
+    "@personal-finance/eslint-config": "workspace:*",
     "@personal-finance/tsconfig": "workspace:*",
     "tsx": "^4",
     "typescript": "^5",

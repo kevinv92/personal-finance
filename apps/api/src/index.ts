@@ -6,7 +6,7 @@ import {
   validatorCompiler,
   jsonSchemaTransform,
 } from "fastify-type-provider-zod";
-import { z } from "zod/v4";
+import { healthRoutes } from "./routes/health.js";
 
 const server = Fastify({ logger: true });
 
@@ -28,23 +28,7 @@ await server.register(fastifySwaggerUi, {
   routePrefix: "/docs",
 });
 
-server.get(
-  "/health",
-  {
-    schema: {
-      tags: ["System"],
-      description: "Health check endpoint",
-      response: {
-        200: z.object({
-          status: z.literal("ok"),
-        }),
-      },
-    },
-  },
-  async () => {
-    return { status: "ok" as const };
-  },
-);
+await server.register(healthRoutes);
 
 const start = async () => {
   try {

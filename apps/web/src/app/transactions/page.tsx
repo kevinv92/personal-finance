@@ -105,6 +105,27 @@ export default function TransactionsPage() {
     return allRows.filter(filterFn);
   }, [allRows, conditions]);
 
+  const totalAmount = useMemo(
+    () => filteredData.reduce((sum, row) => sum + row.amount, 0),
+    [filteredData],
+  );
+
+  const totalIncome = useMemo(
+    () =>
+      filteredData
+        .filter((r) => r.amount > 0)
+        .reduce((sum, r) => sum + r.amount, 0),
+    [filteredData],
+  );
+
+  const totalExpenses = useMemo(
+    () =>
+      filteredData
+        .filter((r) => r.amount < 0)
+        .reduce((sum, r) => sum + r.amount, 0),
+    [filteredData],
+  );
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-6">Transactions</h2>
@@ -119,12 +140,27 @@ export default function TransactionsPage() {
       )}
 
       {filteredData.length > 0 && (
-        <DataTable
-          data={filteredData}
-          columns={columns}
-          searchable
-          pageSize={50}
-        />
+        <>
+          <div className="flex gap-6 mb-4 text-sm">
+            <span className="text-green-600 font-medium">
+              Income: {formatAmount(totalIncome)}
+            </span>
+            <span className="text-red-600 font-medium">
+              Expenses: {formatAmount(totalExpenses)}
+            </span>
+            <span
+              className={`font-medium ${totalAmount >= 0 ? "text-green-600" : "text-red-600"}`}
+            >
+              Net: {formatAmount(totalAmount)}
+            </span>
+          </div>
+          <DataTable
+            data={filteredData}
+            columns={columns}
+            searchable
+            pageSize={50}
+          />
+        </>
       )}
     </div>
   );

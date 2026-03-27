@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { format, parseISO } from "date-fns";
+import { resolveRelativeDate } from "@/lib/filter-engine";
 import {
   getCategories,
   getAccounts,
@@ -53,6 +55,29 @@ interface FilterBarProps {
   onChange: (conditions: FilterCondition[]) => void;
 }
 
+function findCondition(conditions: FilterCondition[], field: string) {
+  return conditions.find((c) => c.field === field);
+}
+
+function extractSingleSelect(condition: FilterCondition | undefined): string {
+  if (!condition) return "";
+  const val = condition.value;
+  if (Array.isArray(val)) return val[0] ?? "";
+  return val as string;
+}
+
+function extractMultiSelect(condition: FilterCondition | undefined): string[] {
+  if (!condition) return [];
+  const val = condition.value;
+  if (Array.isArray(val)) return val;
+  return [val as string];
+}
+
+function extractTextValue(condition: FilterCondition | undefined): string {
+  if (!condition) return "";
+  return (condition.value as string[]).join(", ");
+}
+
 export function FilterBar({ conditions, onChange }: FilterBarProps) {
   const queryClient = useQueryClient();
   const { data: categories = [] } = useQuery({
@@ -79,55 +104,53 @@ export function FilterBar({ conditions, onChange }: FilterBarProps) {
     },
   });
 
-  // Extract current values from conditions
-  const dateCondition = conditions.find((c) => c.field === "date");
+  // --- Extract current values from conditions ---
+
+  const dateCondition = findCondition(conditions, "date");
   const datePreset =
     dateCondition?.operator === "relative" ? dateCondition.value : "";
-  const dateFrom =
+  const dateRange =
     dateCondition?.operator === "between"
-      ? (dateCondition.value as { from: string; to: string }).from
-      : "";
-  const dateTo =
-    dateCondition?.operator === "between"
-      ? (dateCondition.value as { from: string; to: string }).to
-      : "";
+      ? (dateCondition.value as { from: string; to: string })
+      : null;
+  const dateFrom = dateRange?.from ?? "";
+  const dateTo = dateRange?.to ?? "";
 
-  const categoryCondition = conditions.find((c) => c.field === "categoryName");
-  const selectedCategories = categoryCondition
-    ? Array.isArray(categoryCondition.value)
-      ? categoryCondition.value
-      : [categoryCondition.value as string]
-    : [];
+  const selectedCategories = extractMultiSelect(
+    findCondition(conditions, "categoryName"),
+  );
+  const selectedBank = extractSingleSelect(
+    findCondition(conditions, "bankName"),
+  );
+  const selectedAccount = extractSingleSelect(
+    findCondition(conditions, "accountName"),
+  );
 
-  const bankCondition = conditions.find((c) => c.field === "bankName");
-  const selectedBank = bankCondition
-    ? Array.isArray(bankCondition.value)
-      ? (bankCondition.value[0] ?? "")
-      : (bankCondition.value as string)
-    : "";
+  const amountCondition = findCondition(conditions, "amount");
+  const amountRange =
+    amountCondition?.operator === "between"
+      ? (amountCondition.value as { min: number; max: number })
+      : null;
+  const amountMin =
+    amountRange && amountRange.min !== -Infinity ? amountRange.min : "";
+  const amountMax =
+    amountRange && amountRange.max !== Infinity ? amountRange.max : "";
 
-  const accountCondition = conditions.find((c) => c.field === "accountName");
-  const selectedAccount = accountCondition
-    ? Array.isArray(accountCondition.value)
-      ? (accountCondition.value[0] ?? "")
-      : (accountCondition.value as string)
-    : "";
+  const payeeCondition = findCondition(conditions, "payee");
+  const payeeOp = (payeeCondition?.operator as string) ?? "contains";
+  const payeeText = extractTextValue(payeeCondition);
 
-  const payeeCondition = conditions.find((c) => c.field === "payee");
-  const payeeText = payeeCondition
-    ? (payeeCondition.value as string[]).join(", ")
-    : "";
-
-  const memoCondition = conditions.find((c) => c.field === "memo");
-  const memoText = memoCondition
-    ? (memoCondition.value as string[]).join(", ")
-    : "";
+  const memoCondition = findCondition(conditions, "memo");
+  const memoOp = (memoCondition?.operator as string) ?? "contains";
+  const memoText = extractTextValue(memoCondition);
 
   const [customDate, setCustomDate] = useState(
     dateCondition?.operator === "between",
   );
   const [filterName, setFilterName] = useState("");
   const [showSave, setShowSave] = useState(false);
+  const [payeeOperator, setPayeeOperator] = useState<string>(payeeOp);
+  const [memoOperator, setMemoOperator] = useState<string>(memoOp);
   const [categoryOpen, setCategoryOpen] = useState(false);
 
   function updateConditions(
@@ -171,7 +194,16 @@ export function FilterBar({ conditions, onChange }: FilterBarProps) {
     }
   }
 
-  function handleTextFilter(field: "payee" | "memo", text: string) {
+  function handleTextFilter(
+    field: "payee" | "memo",
+    text: string,
+    operator:
+      | "contains"
+      | "notContains"
+      | "equals"
+      | "notEquals"
+      | "startsWith" = "contains",
+  ) {
     if (!text.trim()) {
       updateConditions(field, null);
       return;
@@ -184,7 +216,7 @@ export function FilterBar({ conditions, onChange }: FilterBarProps) {
       updateConditions(field, null);
       return;
     }
-    updateConditions(field, { field, operator: "contains", value: values });
+    updateConditions(field, { field, operator, value: values });
   }
 
   function toggleCategory(name: string) {
@@ -308,7 +340,7 @@ export function FilterBar({ conditions, onChange }: FilterBarProps) {
       {/* Filter inputs row */}
       <div className="flex items-end gap-3 flex-wrap">
         {/* Date filter */}
-        <div>
+        <div className="relative">
           <Label className="text-xs text-muted-foreground mb-1 block">
             Date
           </Label>
@@ -330,6 +362,21 @@ export function FilterBar({ conditions, onChange }: FilterBarProps) {
               ))}
             </SelectContent>
           </Select>
+          {dateCondition?.operator === "relative" &&
+            (() => {
+              const range = resolveRelativeDate(
+                dateCondition as FilterCondition & {
+                  field: "date";
+                  operator: "relative";
+                },
+              );
+              return (
+                <p className="absolute top-full mt-0.5 text-xs text-muted-foreground whitespace-nowrap">
+                  {format(parseISO(range.from), "MMM d")} –{" "}
+                  {format(parseISO(range.to), "MMM d, yyyy")}
+                </p>
+              );
+            })()}
         </div>
 
         {customDate && (
@@ -380,6 +427,34 @@ export function FilterBar({ conditions, onChange }: FilterBarProps) {
                 <CommandList>
                   <CommandEmpty>No categories found.</CommandEmpty>
                   <CommandGroup>
+                    <CommandItem
+                      value="__select_all__"
+                      onSelect={() => {
+                        const allNames = categories.map((c) => c.name);
+                        const allSelected = allNames.every((n) =>
+                          selectedCategories.includes(n),
+                        );
+                        if (allSelected) {
+                          updateConditions("categoryName", null);
+                        } else {
+                          updateConditions("categoryName", {
+                            field: "categoryName",
+                            operator: "in",
+                            value: allNames,
+                          });
+                        }
+                      }}
+                    >
+                      <span className="mr-2">
+                        {categories.length > 0 &&
+                        categories.every((c) =>
+                          selectedCategories.includes(c.name),
+                        )
+                          ? "✓"
+                          : " "}
+                      </span>
+                      Select all
+                    </CommandItem>
                     {categories.map((c) => (
                       <CommandItem
                         key={c.id}
@@ -480,17 +555,98 @@ export function FilterBar({ conditions, onChange }: FilterBarProps) {
           </Select>
         </div>
 
+        {/* Amount filter */}
+        <div>
+          <Label
+            className="text-xs text-muted-foreground mb-1 block"
+            title="Negative = expenses, positive = income. e.g. min -100 max 0 = expenses up to $100"
+          >
+            Amount min
+          </Label>
+          <input
+            type="number"
+            value={amountMin}
+            onChange={(e) => {
+              const val = e.target.value;
+              const min = val === "" ? null : parseFloat(val);
+              const max = amountMax === "" ? null : (amountMax as number);
+              if (min === null && max === null) {
+                updateConditions("amount", null);
+              } else {
+                updateConditions("amount", {
+                  field: "amount",
+                  operator: "between",
+                  value: { min: min ?? -Infinity, max: max ?? Infinity },
+                });
+              }
+            }}
+            placeholder="e.g. -500 or 0"
+            className="h-8 w-24 min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          />
+        </div>
+        <div>
+          <Label
+            className="text-xs text-muted-foreground mb-1 block"
+            title="Negative = expenses, positive = income. e.g. min 1000 max 5000 = income $1k-$5k"
+          >
+            Amount max
+          </Label>
+          <input
+            type="number"
+            value={amountMax}
+            onChange={(e) => {
+              const val = e.target.value;
+              const max = val === "" ? null : parseFloat(val);
+              const min = amountMin === "" ? null : (amountMin as number);
+              if (min === null && max === null) {
+                updateConditions("amount", null);
+              } else {
+                updateConditions("amount", {
+                  field: "amount",
+                  operator: "between",
+                  value: { min: min ?? -Infinity, max: max ?? Infinity },
+                });
+              }
+            }}
+            placeholder="e.g. 0 or 5000"
+            className="h-8 w-24 min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          />
+        </div>
+
         {/* Payee filter */}
         <div>
           <Label className="text-xs text-muted-foreground mb-1 block">
             Payee
           </Label>
-          <input
-            value={payeeText}
-            onChange={(e) => handleTextFilter("payee", e.target.value)}
-            placeholder="e.g. WOOLWORTHS, NEW WORLD"
-            className="h-8 w-52 min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-          />
+          <div className="flex gap-1">
+            <select
+              value={payeeOperator}
+              onChange={(e) => {
+                const op = e.target.value as "contains" | "notContains";
+                setPayeeOperator(op);
+                if (payeeText) handleTextFilter("payee", payeeText, op);
+              }}
+              className="h-8 rounded-lg border border-input bg-transparent px-1.5 text-xs outline-none"
+            >
+              <option value="contains">contains</option>
+              <option value="notContains">not contains</option>
+              <option value="equals">equals</option>
+              <option value="notEquals">not equals</option>
+              <option value="startsWith">starts with</option>
+            </select>
+            <input
+              value={payeeText}
+              onChange={(e) =>
+                handleTextFilter(
+                  "payee",
+                  e.target.value,
+                  payeeOperator as "contains",
+                )
+              }
+              placeholder="e.g. WOOLWORTHS, NEW WORLD"
+              className="h-8 w-44 min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            />
+          </div>
         </div>
 
         {/* Memo filter */}
@@ -498,12 +654,35 @@ export function FilterBar({ conditions, onChange }: FilterBarProps) {
           <Label className="text-xs text-muted-foreground mb-1 block">
             Memo
           </Label>
-          <input
-            value={memoText}
-            onChange={(e) => handleTextFilter("memo", e.target.value)}
-            placeholder="e.g. SALARY"
-            className="h-8 w-40 min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-          />
+          <div className="flex gap-1">
+            <select
+              value={memoOperator}
+              onChange={(e) => {
+                const op = e.target.value as "contains" | "notContains";
+                setMemoOperator(op);
+                if (memoText) handleTextFilter("memo", memoText, op);
+              }}
+              className="h-8 rounded-lg border border-input bg-transparent px-1.5 text-xs outline-none"
+            >
+              <option value="contains">contains</option>
+              <option value="notContains">not contains</option>
+              <option value="equals">equals</option>
+              <option value="notEquals">not equals</option>
+              <option value="startsWith">starts with</option>
+            </select>
+            <input
+              value={memoText}
+              onChange={(e) =>
+                handleTextFilter(
+                  "memo",
+                  e.target.value,
+                  memoOperator as "contains",
+                )
+              }
+              placeholder="e.g. SALARY"
+              className="h-8 w-32 min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            />
+          </div>
         </div>
       </div>
 

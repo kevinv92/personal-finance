@@ -87,5 +87,5 @@ erDiagram
 - **Category rules**: `match_field` controls which field to check (`payee`, `memo`, or `both`). `match_values` is a JSON array of strings — any match triggers the rule. Rules are ordered by `sort_order` — first match wins. Supports `contains`, `exact`, and `startsWith` match types (case-sensitive). Rules can be applied on import or manually via the API/UI.
 - **Transaction <-> Category join table**: a transaction can have categories assigned, either manually or via rules during CSV import
 - **Account types**: "checking", "savings", "credit" — covers daily banking and credit cards
-- **Saved filters**: reusable filter conditions stored as JSON. Supports relative dates (last 30 days, last month, etc.), text matching with multiple values, category/account selection, and amount ranges. Conditions are AND'd together. Designed to be referenced by future dashboards/reports.
+- **Saved filters**: reusable filter conditions stored as JSON. Supports relative dates (last 30 days, last month, etc.), text matching with multiple values and negative operators (`notContains`, `notEquals`), category/account/bank selection with `notIn`, and amount min/max ranges. Conditions are AND'd together. Designed to be referenced by future dashboards/reports.
 - **SQLite**: file-based, zero config. Can migrate to PostgreSQL later via Drizzle

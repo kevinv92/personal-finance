@@ -26,13 +26,19 @@ const DateRangeCondition = z.object({
 
 const TextCondition = z.object({
   field: z.enum(["payee", "memo"]),
-  operator: z.enum(["contains", "equals", "startsWith"]),
+  operator: z.enum([
+    "contains",
+    "equals",
+    "startsWith",
+    "notContains",
+    "notEquals",
+  ]),
   value: z.array(z.string().min(1)).min(1),
 });
 
 const SelectCondition = z.object({
   field: z.enum(["categoryName", "bankName", "accountName"]),
-  operator: z.enum(["equals", "in"]),
+  operator: z.enum(["equals", "in", "notEquals", "notIn"]),
   value: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),
 });
 

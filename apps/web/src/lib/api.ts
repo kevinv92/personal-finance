@@ -88,12 +88,17 @@ export type FilterCondition =
   | { field: "date"; operator: "between"; value: { from: string; to: string } }
   | {
       field: "payee" | "memo";
-      operator: "contains" | "equals" | "startsWith";
+      operator:
+        | "contains"
+        | "equals"
+        | "startsWith"
+        | "notContains"
+        | "notEquals";
       value: string[];
     }
   | {
       field: "categoryName" | "bankName" | "accountName";
-      operator: "equals" | "in";
+      operator: "equals" | "in" | "notEquals" | "notIn";
       value: string | string[];
     }
   | {

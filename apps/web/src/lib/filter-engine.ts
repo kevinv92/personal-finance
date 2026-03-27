@@ -26,7 +26,7 @@ interface FilterableRow {
 /**
  * Resolves a relative date preset to an absolute { from, to } range.
  */
-function resolveRelativeDate(
+export function resolveRelativeDate(
   value: FilterCondition & { field: "date"; operator: "relative" },
 ): { from: string; to: string } {
   const today = new Date();
@@ -60,20 +60,22 @@ function resolveRelativeDate(
 
 function textMatches(
   value: string | null,
-  operator: "contains" | "equals" | "startsWith",
+  operator: "contains" | "equals" | "startsWith" | "notContains" | "notEquals",
   matchValues: string[],
 ): boolean {
   if (value == null) return false;
-  return matchValues.some((mv) => {
-    switch (operator) {
-      case "contains":
-        return value.includes(mv);
-      case "equals":
-        return value === mv;
-      case "startsWith":
-        return value.startsWith(mv);
-    }
-  });
+  switch (operator) {
+    case "contains":
+      return matchValues.some((mv) => value.includes(mv));
+    case "notContains":
+      return matchValues.every((mv) => !value.includes(mv));
+    case "equals":
+      return matchValues.some((mv) => value === mv);
+    case "notEquals":
+      return matchValues.every((mv) => value !== mv);
+    case "startsWith":
+      return matchValues.some((mv) => value.startsWith(mv));
+  }
 }
 
 function matchesCondition(
@@ -101,18 +103,36 @@ function matchesCondition(
       const values = Array.isArray(condition.value)
         ? condition.value
         : [condition.value];
+      if (
+        condition.operator === "notEquals" ||
+        condition.operator === "notIn"
+      ) {
+        return row.categoryName == null || !values.includes(row.categoryName);
+      }
       return row.categoryName != null && values.includes(row.categoryName);
     }
     case "bankName": {
       const values = Array.isArray(condition.value)
         ? condition.value
         : [condition.value];
+      if (
+        condition.operator === "notEquals" ||
+        condition.operator === "notIn"
+      ) {
+        return !values.includes(row.bankName);
+      }
       return values.includes(row.bankName);
     }
     case "accountName": {
       const values = Array.isArray(condition.value)
         ? condition.value
         : [condition.value];
+      if (
+        condition.operator === "notEquals" ||
+        condition.operator === "notIn"
+      ) {
+        return !values.includes(row.accountName);
+      }
       return values.includes(row.accountName);
     }
     case "amount": {

@@ -1,13 +1,46 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getAccounts, getBanks } from "@/lib/api";
+import { createColumnHelper } from "@tanstack/react-table";
+import { getAccounts, getBanks, type Account } from "@/lib/api";
+import { DataTable } from "@/components/data-table";
+
+type AccountRow = Account & { bankName: string };
+const columnHelper = createColumnHelper<AccountRow>();
+
+const columns = [
+  columnHelper.accessor("name", {
+    header: "Name",
+    cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+  }),
+  columnHelper.accessor("bankName", { header: "Bank" }),
+  columnHelper.accessor("type", {
+    header: "Type",
+    cell: (info) => <span className="capitalize">{info.getValue()}</span>,
+  }),
+  columnHelper.accessor("isActive", {
+    header: "Status",
+    cell: (info) => {
+      const active = info.getValue();
+      return (
+        <span
+          className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
+            active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {active ? "Active" : "Inactive"}
+        </span>
+      );
+    },
+  }),
+];
 
 export default function AccountsPage() {
   const {
     data: accounts = [],
-    isLoading: loadingAccounts,
-    error: accountsError,
+    isLoading,
+    error,
   } = useQuery({
     queryKey: ["accounts"],
     queryFn: () => getAccounts(),
@@ -18,11 +51,19 @@ export default function AccountsPage() {
     queryFn: getBanks,
   });
 
-  const isLoading = loadingAccounts;
-  const error = accountsError;
+  const bankNameMap = useMemo(
+    () => new Map(banks.map((b) => [b.id, b.name])),
+    [banks],
+  );
 
-  const bankName = (bankId: string) =>
-    banks.find((b) => b.id === bankId)?.name ?? bankId;
+  const data = useMemo(
+    () =>
+      accounts.map((a) => ({
+        ...a,
+        bankName: bankNameMap.get(a.bankId) ?? a.bankId,
+      })),
+    [accounts, bankNameMap],
+  );
 
   return (
     <div>
@@ -31,58 +72,11 @@ export default function AccountsPage() {
       {isLoading && <p className="text-gray-500">Loading...</p>}
       {error && <p className="text-red-600">Error: {error.message}</p>}
 
-      {!isLoading && !error && accounts.length === 0 && (
+      {!isLoading && !error && data.length === 0 && (
         <p className="text-gray-500">No accounts found.</p>
       )}
 
-      {accounts.length > 0 && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Bank
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {accounts.map((account) => (
-                <tr key={account.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {account.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {bankName(account.bankId)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
-                    {account.type}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span
-                      className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
-                        account.isActive
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {account.isActive ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {data.length > 0 && <DataTable data={data} columns={columns} />}
     </div>
   );
 }

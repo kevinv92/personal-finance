@@ -1,7 +1,22 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getBanks } from "@/lib/api";
+import { createColumnHelper } from "@tanstack/react-table";
+import { getBanks, type Bank } from "@/lib/api";
+import { DataTable } from "@/components/data-table";
+
+const columnHelper = createColumnHelper<Bank>();
+
+const columns = [
+  columnHelper.accessor("name", {
+    header: "Name",
+    cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+  }),
+  columnHelper.accessor("createdAt", {
+    header: "Created",
+    cell: (info) => new Date(info.getValue()).toLocaleDateString(),
+  }),
+];
 
 export default function BanksPage() {
   const {
@@ -24,34 +39,7 @@ export default function BanksPage() {
         <p className="text-gray-500">No banks found.</p>
       )}
 
-      {banks.length > 0 && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Created
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {banks.map((bank) => (
-                <tr key={bank.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {bank.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(bank.createdAt).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {banks.length > 0 && <DataTable data={banks} columns={columns} />}
     </div>
   );
 }

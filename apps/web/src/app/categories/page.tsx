@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createColumnHelper } from "@tanstack/react-table";
 import {
   getCategories,
   getCategoryRules,
@@ -11,6 +12,21 @@ import {
   type Category,
   type CategoryRule,
 } from "@/lib/api";
+import { DataTable } from "@/components/data-table";
+
+type CategoryRow = { name: string; subcategories: string };
+const categoryColumnHelper = createColumnHelper<CategoryRow>();
+
+const categoryColumns = [
+  categoryColumnHelper.accessor("name", {
+    header: "Category",
+    cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+  }),
+  categoryColumnHelper.accessor("subcategories", {
+    header: "Subcategories",
+    cell: (info) => info.getValue() || "—",
+  }),
+];
 
 export default function CategoriesPage() {
   const { data: categories = [], isLoading: loadingCategories } = useQuery({
@@ -23,14 +39,76 @@ export default function CategoriesPage() {
     queryFn: getCategoryRules,
   });
 
-  const parentCategories = categories.filter((c) => !c.parentId);
-  const childCategories = (parentId: string) =>
-    categories.filter((c) => c.parentId === parentId);
-
   const categoryName = (id: string) =>
     categories.find((c) => c.id === id)?.name ?? id;
 
+  const categoryRows = useMemo(() => {
+    const parents = categories.filter((c) => !c.parentId);
+    return parents.map((cat) => ({
+      name: cat.name,
+      subcategories: categories
+        .filter((c) => c.parentId === cat.id)
+        .map((c) => c.name)
+        .join(", "),
+    }));
+  }, [categories]);
+
+  const ruleRows = useMemo(
+    () => rules.map((rule, index) => ({ ...rule, index: index + 1 })),
+    [rules],
+  );
+
   const isLoading = loadingCategories || loadingRules;
+
+  const matchLabel: Record<string, string> = {
+    contains: "contains",
+    exact: "equals",
+    startsWith: "starts with",
+  };
+
+  const ruleColumnHelper = createColumnHelper<
+    CategoryRule & { index: number }
+  >();
+
+  const ruleColumns = useMemo(
+    () => [
+      ruleColumnHelper.accessor("index", { header: "#" }),
+      ruleColumnHelper.display({
+        id: "match",
+        header: "Match",
+        cell: (info) => {
+          const rule = info.row.original;
+          return (
+            <>
+              <span className="font-medium">{rule.matchField}</span>{" "}
+              <span className="text-gray-500">
+                {matchLabel[rule.matchType]}
+              </span>{" "}
+              <span className="font-medium">
+                {rule.matchValues.map((v) => `"${v}"`).join(", ")}
+              </span>
+            </>
+          );
+        },
+      }),
+      ruleColumnHelper.display({
+        id: "category",
+        header: "Category",
+        cell: (info) => (
+          <span className="font-medium">
+            {categoryName(info.row.original.categoryId)}
+          </span>
+        ),
+      }),
+      ruleColumnHelper.display({
+        id: "actions",
+        header: "Actions",
+        meta: { align: "right" },
+        cell: (info) => <DeleteRuleButton ruleId={info.row.original.id} />,
+      }),
+    ],
+    [categories],
+  );
 
   return (
     <div className="space-y-8">
@@ -43,35 +121,8 @@ export default function CategoriesPage() {
           <p className="text-gray-500">No categories found.</p>
         )}
 
-        {parentCategories.length > 0 && (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Subcategories
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {parentCategories.map((cat) => (
-                  <tr key={cat.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {cat.name}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {childCategories(cat.id)
-                        .map((c) => c.name)
-                        .join(", ") || "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        {categoryRows.length > 0 && (
+          <DataTable data={categoryRows} columns={categoryColumns} />
         )}
       </div>
 
@@ -87,40 +138,34 @@ export default function CategoriesPage() {
           <p className="text-gray-500 mt-4">No rules defined yet.</p>
         )}
 
-        {rules.length > 0 && (
-          <div className="bg-white rounded-lg shadow overflow-hidden mt-4">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    #
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Match
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {rules.map((rule, index) => (
-                  <RuleRow
-                    key={rule.id}
-                    rule={rule}
-                    index={index + 1}
-                    categoryName={categoryName(rule.categoryId)}
-                  />
-                ))}
-              </tbody>
-            </table>
+        {ruleRows.length > 0 && (
+          <div className="mt-4">
+            <DataTable data={ruleRows} columns={ruleColumns} />
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+function DeleteRuleButton({ ruleId }: { ruleId: string }) {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: () => deleteCategoryRule(ruleId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categoryRules"] });
+    },
+  });
+
+  return (
+    <button
+      onClick={() => mutation.mutate()}
+      disabled={mutation.isPending}
+      className="text-red-600 hover:text-red-800 text-sm font-medium disabled:opacity-50"
+    >
+      Delete
+    </button>
   );
 }
 
@@ -264,57 +309,5 @@ function RuleForm({ categories }: { categories: Category[] }) {
         Add Rule
       </button>
     </form>
-  );
-}
-
-function RuleRow({
-  rule,
-  index,
-  categoryName,
-}: {
-  rule: CategoryRule;
-  index: number;
-  categoryName: string;
-}) {
-  const queryClient = useQueryClient();
-
-  const mutation = useMutation({
-    mutationFn: () => deleteCategoryRule(rule.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categoryRules"] });
-    },
-  });
-
-  const matchLabel: Record<string, string> = {
-    contains: "contains",
-    exact: "equals",
-    startsWith: "starts with",
-  };
-
-  return (
-    <tr className="hover:bg-gray-50">
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-        {index}
-      </td>
-      <td className="px-6 py-4 text-sm">
-        <span className="font-medium">{rule.matchField}</span>{" "}
-        <span className="text-gray-500">{matchLabel[rule.matchType]}</span>{" "}
-        <span className="font-medium">
-          {rule.matchValues.map((v) => `"${v}"`).join(", ")}
-        </span>
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-        {categoryName}
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
-        <button
-          onClick={() => mutation.mutate()}
-          disabled={mutation.isPending}
-          className="text-red-600 hover:text-red-800 text-sm font-medium disabled:opacity-50"
-        >
-          Delete
-        </button>
-      </td>
-    </tr>
   );
 }

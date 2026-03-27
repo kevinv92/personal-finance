@@ -1,10 +1,10 @@
 import { z } from "zod/v4";
 
 export const CategorySchemeSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().min(1),
   isActive: z.boolean(),
-  createdAt: z.string().datetime(),
+  createdAt: z.iso.datetime(),
 });
 
 export const CreateCategorySchemeSchema = z.object({

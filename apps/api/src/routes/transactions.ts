@@ -17,9 +17,9 @@ export async function transactionRoutes(fastify: FastifyInstance) {
         description:
           "List transactions, optionally filtered by account or date range",
         querystring: z.object({
-          accountId: z.string().uuid().optional(),
-          from: z.string().date().optional(),
-          to: z.string().date().optional(),
+          accountId: z.uuid().optional(),
+          from: z.iso.date().optional(),
+          to: z.iso.date().optional(),
         }),
         response: {
           200: z.array(TransactionSchema),
@@ -58,7 +58,7 @@ export async function transactionRoutes(fastify: FastifyInstance) {
         tags: ["Transactions"],
         description: "Get a single transaction by ID",
         params: z.object({
-          id: z.string().uuid(),
+          id: z.uuid(),
         }),
         response: {
           200: TransactionSchema,

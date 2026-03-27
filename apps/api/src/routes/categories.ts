@@ -17,7 +17,7 @@ export async function categoryRoutes(fastify: FastifyInstance) {
         tags: ["Categories"],
         description: "List categories, optionally filtered by scheme",
         querystring: z.object({
-          schemeId: z.string().uuid().optional(),
+          schemeId: z.uuid().optional(),
         }),
         response: {
           200: z.array(CategorySchema),

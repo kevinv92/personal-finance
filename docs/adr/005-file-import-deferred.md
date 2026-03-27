@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded by [ADR-007](007-csv-import-design.md)
 
 ## Context
 

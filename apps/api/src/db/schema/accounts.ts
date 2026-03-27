@@ -10,6 +10,7 @@ export const accounts = sqliteTable("accounts", {
   accountNumber: text("account_number"),
   type: text("type", { enum: ["checking", "savings", "credit"] }).notNull(),
   currency: text("currency").notNull().default("AUD"),
+  csvSignature: text("csv_signature"),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
   createdAt: text("created_at").notNull(),
 });

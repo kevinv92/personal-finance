@@ -24,7 +24,7 @@ export async function transactionCategoryRoutes(fastify: FastifyInstance) {
         tags: ["Transaction Categories"],
         description: "List category assignments for a transaction",
         querystring: z.object({
-          transactionId: z.string().uuid(),
+          transactionId: z.uuid(),
         }),
         response: {
           200: z.array(TransactionCategorySchema),
@@ -110,7 +110,7 @@ export async function transactionCategoryRoutes(fastify: FastifyInstance) {
         tags: ["Transaction Categories"],
         description: "Remove a category assignment from a transaction",
         params: z.object({
-          id: z.string().uuid(),
+          id: z.uuid(),
         }),
         response: {
           204: z.void(),

@@ -25,7 +25,7 @@ export async function accountRoutes(fastify: FastifyInstance) {
         tags: ["Accounts"],
         description: "List all accounts, optionally filtered by bank",
         querystring: z.object({
-          bankId: z.string().uuid().optional(),
+          bankId: z.uuid().optional(),
         }),
         response: {
           200: z.array(AccountSchema),
@@ -62,6 +62,7 @@ export async function accountRoutes(fastify: FastifyInstance) {
         id: randomUUID(),
         ...request.body,
         accountNumber: request.body.accountNumber ?? null,
+        csvSignature: null,
         isActive: true,
         createdAt: new Date().toISOString(),
       };
@@ -77,7 +78,7 @@ export async function accountRoutes(fastify: FastifyInstance) {
         tags: ["Accounts"],
         description: "Update an account",
         params: z.object({
-          id: z.string().uuid(),
+          id: z.uuid(),
         }),
         body: UpdateAccountSchema,
         response: {

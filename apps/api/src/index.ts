@@ -1,5 +1,6 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import multipart from "@fastify/multipart";
 import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
 import {
@@ -14,6 +15,7 @@ import { transactionRoutes } from "./routes/transactions.js";
 import { categorySchemeRoutes } from "./routes/category-schemes.js";
 import { categoryRoutes } from "./routes/categories.js";
 import { transactionCategoryRoutes } from "./routes/transaction-categories.js";
+import { importRoutes } from "./routes/import.js";
 
 const server = Fastify({ logger: true });
 
@@ -21,6 +23,7 @@ server.setValidatorCompiler(validatorCompiler);
 server.setSerializerCompiler(serializerCompiler);
 
 await server.register(cors, { origin: true });
+await server.register(multipart);
 
 await server.register(fastifySwagger, {
   openapi: {
@@ -48,6 +51,7 @@ await server.register(categoryRoutes, { prefix: "/api/categories" });
 await server.register(transactionCategoryRoutes, {
   prefix: "/api/transaction-categories",
 });
+await server.register(importRoutes, { prefix: "/api/import" });
 
 const start = async () => {
   try {

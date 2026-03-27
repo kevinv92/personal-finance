@@ -35,6 +35,7 @@ export interface Account {
   accountNumber: string | null;
   type: "checking" | "savings" | "credit";
   currency: string;
+  csvSignature: string | null;
   isActive: boolean;
   createdAt: string;
 }
@@ -42,8 +43,12 @@ export interface Account {
 export interface Transaction {
   id: string;
   accountId: string;
+  externalId: string | null;
   date: string;
-  description: string;
+  dateProcessed: string | null;
+  type: string | null;
+  payee: string;
+  memo: string | null;
   amount: number;
   createdAt: string;
 }

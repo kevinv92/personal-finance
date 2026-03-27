@@ -14,6 +14,26 @@ import { CSVParser, csvMapperPresets } from "../lib/csv-parser/index.js";
 import type { CSVMapperConfig } from "../lib/csv-parser/index.js";
 
 export async function importRoutes(fastify: FastifyInstance) {
+  // List available CSV mapper presets
+  fastify.get(
+    "/presets",
+    {
+      schema: {
+        tags: ["Import"],
+        description: "List available CSV mapper presets",
+      },
+    },
+    async () => {
+      return Object.entries(csvMapperPresets).map(([key, preset]) => ({
+        key,
+        name: preset.name,
+        bank: preset.bank,
+        accountType: preset.accountType,
+        csvSignature: preset.csvSignature,
+      }));
+    },
+  );
+
   fastify.post(
     "/csv",
     {

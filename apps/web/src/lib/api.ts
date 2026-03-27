@@ -183,6 +183,24 @@ export interface DashboardWidget {
   createdAt: string;
 }
 
+export interface CSVMapperPreset {
+  key: string;
+  name: string;
+  bank: string;
+  accountType: "checking" | "savings" | "credit";
+  csvSignature: string;
+}
+
+export interface ImportResult {
+  preset: string;
+  bank: string;
+  accountSignature: string;
+  imported: number;
+  skipped: number;
+  categorised: number;
+  total: number;
+}
+
 // --- API functions ---
 
 export const getBanks = () => apiFetch<Bank[]>("/banks");
@@ -268,3 +286,18 @@ export const removeDashboardWidget = (dashboardId: string, widgetId: string) =>
   apiFetch<void>(`/dashboards/${dashboardId}/widgets/${widgetId}`, {
     method: "DELETE",
   });
+export const getImportPresets = () =>
+  apiFetch<CSVMapperPreset[]>("/import/presets");
+export const importCSV = async (file: File): Promise<ImportResult> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(`${API_BASE}/import/csv`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(err.message || `Import failed: ${res.status}`);
+  }
+  return res.json();
+};

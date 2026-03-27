@@ -35,6 +35,28 @@ CREATE TABLE `category_rules` (
 	FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE TABLE `dashboard_widgets` (
+	`id` text PRIMARY KEY NOT NULL,
+	`dashboard_id` text NOT NULL,
+	`type` text NOT NULL,
+	`title` text NOT NULL,
+	`filter_id` text,
+	`x` integer NOT NULL,
+	`y` integer NOT NULL,
+	`w` integer NOT NULL,
+	`h` integer NOT NULL,
+	`config` text DEFAULT '{}' NOT NULL,
+	`created_at` text NOT NULL,
+	FOREIGN KEY (`dashboard_id`) REFERENCES `dashboards`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`filter_id`) REFERENCES `saved_filters`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `dashboards` (
+	`id` text PRIMARY KEY NOT NULL,
+	`name` text NOT NULL,
+	`created_at` text NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `saved_filters` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,

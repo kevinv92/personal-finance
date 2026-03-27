@@ -14,6 +14,8 @@ erDiagram
     categories ||--o{ category_rules : "matched by"
     transactions ||--o{ transaction_categories : tagged
     categories ||--o{ transaction_categories : applied
+    dashboards ||--o{ dashboard_widgets : contains
+    dashboard_widgets }o--o| saved_filters : "powered by"
 
     banks {
         text id PK
@@ -74,6 +76,26 @@ erDiagram
         text id PK
         text name
         text conditions JSON
+        text created_at
+    }
+
+    dashboards {
+        text id PK
+        text name
+        text created_at
+    }
+
+    dashboard_widgets {
+        text id PK
+        text dashboard_id FK
+        text type
+        text title
+        text filter_id FK
+        integer x
+        integer y
+        integer w
+        integer h
+        text config JSON
         text created_at
     }
 ```

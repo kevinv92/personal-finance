@@ -44,3 +44,28 @@ export {
   type SavedFilter,
   type CreateSavedFilter,
 } from "./saved-filter.js";
+export {
+  DashboardSchema,
+  CreateDashboardSchema,
+  DashboardWidgetSchema,
+  CreateDashboardWidgetSchema,
+  UpdateWidgetLayoutSchema,
+  WidgetTypeEnum,
+  type Dashboard,
+  type CreateDashboard,
+  type DashboardWidget,
+  type CreateDashboardWidget,
+} from "./dashboard.js";
+export {
+  WidgetConfigSchema,
+  SummaryConfigSchema,
+  CategoryBreakdownConfigSchema,
+  TrendConfigSchema,
+  TransactionListConfigSchema,
+  widgetConfigDefaults,
+  type WidgetConfig,
+  type SummaryConfig,
+  type CategoryBreakdownConfig,
+  type TrendConfig,
+  type TransactionListConfig,
+} from "./widget-config.js";

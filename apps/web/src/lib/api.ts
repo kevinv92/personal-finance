@@ -4,12 +4,16 @@ export async function apiFetch<T>(
   path: string,
   options?: RequestInit,
 ): Promise<T> {
+  const headers: Record<string, string> = {
+    ...(options?.headers as Record<string, string>),
+  };
+  if (options?.body) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
+    headers,
   });
 
   if (!res.ok) {
@@ -114,6 +118,71 @@ export interface SavedFilter {
   createdAt: string;
 }
 
+export type WidgetType =
+  | "summary"
+  | "categoryBreakdown"
+  | "trend"
+  | "transactionList";
+
+export interface Dashboard {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
+export interface SummaryConfig {
+  type: "summary";
+  showTransactionCount: boolean;
+}
+
+export interface CategoryBreakdownConfig {
+  type: "categoryBreakdown";
+  maxCategories: number;
+  showTable: boolean;
+}
+
+export interface TrendConfig {
+  type: "trend";
+  groupBy: "day" | "week" | "month";
+  chartType: "line" | "bar";
+}
+
+export interface TransactionListConfig {
+  type: "transactionList";
+  pageSize: number;
+}
+
+export type WidgetConfig =
+  | SummaryConfig
+  | CategoryBreakdownConfig
+  | TrendConfig
+  | TransactionListConfig;
+
+export const widgetConfigDefaults: Record<WidgetType, WidgetConfig> = {
+  summary: { type: "summary", showTransactionCount: true },
+  categoryBreakdown: {
+    type: "categoryBreakdown",
+    maxCategories: 10,
+    showTable: false,
+  },
+  trend: { type: "trend", groupBy: "month", chartType: "bar" },
+  transactionList: { type: "transactionList", pageSize: 10 },
+};
+
+export interface DashboardWidget {
+  id: string;
+  dashboardId: string;
+  type: WidgetType;
+  title: string;
+  filterId: string | null;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  config: Record<string, unknown>;
+  createdAt: string;
+}
+
 // --- API functions ---
 
 export const getBanks = () => apiFetch<Bank[]>("/banks");
@@ -150,3 +219,52 @@ export const createSavedFilter = (
   });
 export const deleteSavedFilter = (id: string) =>
   apiFetch<void>(`/saved-filters/${id}`, { method: "DELETE" });
+export const getDashboards = () => apiFetch<Dashboard[]>("/dashboards");
+export const createDashboard = (data: { name: string }) =>
+  apiFetch<Dashboard>("/dashboards", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+export const renameDashboard = (id: string, name: string) =>
+  apiFetch<Dashboard>(`/dashboards/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ name }),
+  });
+export const deleteDashboard = (id: string) =>
+  apiFetch<void>(`/dashboards/${id}`, { method: "DELETE" });
+export const getDashboardWidgets = (dashboardId: string) =>
+  apiFetch<DashboardWidget[]>(`/dashboards/${dashboardId}/widgets`);
+export const addDashboardWidget = (
+  dashboardId: string,
+  widget: Omit<DashboardWidget, "id" | "dashboardId" | "createdAt">,
+) =>
+  apiFetch<DashboardWidget>(`/dashboards/${dashboardId}/widgets`, {
+    method: "POST",
+    body: JSON.stringify(widget),
+  });
+export const updateWidgetLayouts = (
+  dashboardId: string,
+  layouts: { id: string; x: number; y: number; w: number; h: number }[],
+) =>
+  apiFetch<{ updated: number }>(`/dashboards/${dashboardId}/widgets`, {
+    method: "PUT",
+    body: JSON.stringify(layouts),
+  });
+export const updateDashboardWidget = (
+  dashboardId: string,
+  widgetId: string,
+  data: {
+    type?: WidgetType;
+    title?: string;
+    filterId?: string | null;
+    config?: Record<string, unknown>;
+  },
+) =>
+  apiFetch<DashboardWidget>(`/dashboards/${dashboardId}/widgets/${widgetId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+export const removeDashboardWidget = (dashboardId: string, widgetId: string) =>
+  apiFetch<void>(`/dashboards/${dashboardId}/widgets/${widgetId}`, {
+    method: "DELETE",
+  });

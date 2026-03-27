@@ -11,6 +11,7 @@
     "test": "turbo run test",
     "lint": "turbo run lint",
     "format": "prettier --write .",
+    "storybook": "pnpm --filter @personal-finance/web storybook",
     "format:check": "prettier --check .",
     "prepare": "husky",
     "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s",

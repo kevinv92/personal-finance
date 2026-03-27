@@ -16,6 +16,7 @@ import { categoryRoutes } from "./routes/categories.js";
 import { transactionCategoryRoutes } from "./routes/transaction-categories.js";
 import { categoryRuleRoutes } from "./routes/category-rules.js";
 import { savedFilterRoutes } from "./routes/saved-filters.js";
+import { dashboardRoutes } from "./routes/dashboards.js";
 import { importRoutes } from "./routes/import.js";
 
 const server = Fastify({ logger: true });
@@ -23,7 +24,10 @@ const server = Fastify({ logger: true });
 server.setValidatorCompiler(validatorCompiler);
 server.setSerializerCompiler(serializerCompiler);
 
-await server.register(cors, { origin: true });
+await server.register(cors, {
+  origin: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+});
 await server.register(multipart);
 
 await server.register(fastifySwagger, {
@@ -51,6 +55,7 @@ await server.register(transactionCategoryRoutes, {
 });
 await server.register(categoryRuleRoutes, { prefix: "/api/category-rules" });
 await server.register(savedFilterRoutes, { prefix: "/api/saved-filters" });
+await server.register(dashboardRoutes, { prefix: "/api/dashboards" });
 await server.register(importRoutes, { prefix: "/api/import" });
 
 server.get("/api/debug/routes", async () => {

@@ -8,3 +8,4 @@ dist
 # Data directory contents (keep directory via .gitkeep)
 apps/api/data/*
 !apps/api/data/.gitkeep
+actions.log

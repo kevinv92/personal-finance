@@ -14,6 +14,7 @@ import { accountRoutes } from "./routes/accounts.js";
 import { transactionRoutes } from "./routes/transactions.js";
 import { categoryRoutes } from "./routes/categories.js";
 import { transactionCategoryRoutes } from "./routes/transaction-categories.js";
+import { categoryRuleRoutes } from "./routes/category-rules.js";
 import { importRoutes } from "./routes/import.js";
 
 const server = Fastify({ logger: true });
@@ -47,11 +48,18 @@ await server.register(categoryRoutes, { prefix: "/api/categories" });
 await server.register(transactionCategoryRoutes, {
   prefix: "/api/transaction-categories",
 });
+await server.register(categoryRuleRoutes, { prefix: "/api/category-rules" });
 await server.register(importRoutes, { prefix: "/api/import" });
+
+server.get("/api/debug/routes", async () => {
+  return server.printRoutes({ commonPrefix: false });
+});
 
 const start = async () => {
   try {
     await server.listen({ port: 3001, host: "0.0.0.0" });
+    console.log("\nRegistered routes:");
+    console.log(server.printRoutes());
   } catch (err) {
     server.log.error(err);
     process.exit(1);

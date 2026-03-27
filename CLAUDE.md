@@ -45,13 +45,27 @@ Turbo monorepo with Typescript.
 ### Setup
 
 ```bash
-# Steps to set up the development environment
+pnpm install
+cd apps/api && pnpm db:reset   # nuke DB, migrate, seed, import CSVs from data/
 ```
+
+Note: `pnpm db:reset` requires port 3001 to be free (stop dev server first). It will start a temporary server to import CSV files from `apps/api/data/`.
 
 ### Running
 
 ```bash
-# How to run the application locally
+pnpm dev   # starts both API (port 3001) and web (port 3000)
+```
+
+### Database
+
+```bash
+cd apps/api
+pnpm db:reset      # nuke DB, migrate, seed from presets + seed-config, import CSVs
+pnpm db:generate   # generate Drizzle migration from schema changes
+pnpm db:migrate    # apply migrations
+pnpm db:seed       # seed without nuking (banks/accounts from presets, categories/rules from data/seed-config.ts)
+pnpm db:studio     # open Drizzle Studio
 ```
 
 ### Testing
@@ -73,6 +87,10 @@ TBD
 ## Architecture Decisions
 
 Refer to `docs/adr/` for all architecture decision records. Read these before suggesting changes to the tech stack or project structure.
+
+## Actions Log
+
+Maintain an `actions.log` file at the project root. This file is gitignored and local only. Use it to track what you've done and whether each task is finished, so work can be resumed exactly if a session is interrupted.
 
 ## Common Pitfalls
 

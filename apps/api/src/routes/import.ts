@@ -3,7 +3,13 @@ import { randomUUID } from "crypto";
 import { eq } from "drizzle-orm";
 import { format } from "date-fns";
 import { db } from "../db/index.js";
-import { banks, accounts, transactions } from "../db/schema/index.js";
+import {
+  banks,
+  accounts,
+  transactions,
+  transactionCategories,
+} from "../db/schema/index.js";
+import { matchCategory } from "../lib/category-matcher.js";
 import { CSVParser, csvMapperPresets } from "../lib/csv-parser/index.js";
 import type { CSVMapperConfig } from "../lib/csv-parser/index.js";
 
@@ -52,6 +58,7 @@ export async function importRoutes(fastify: FastifyInstance) {
       // Insert transactions, skip duplicates by externalId
       let imported = 0;
       let skipped = 0;
+      let categorised = 0;
 
       for (const row of result.rows) {
         const existing = db
@@ -65,9 +72,10 @@ export async function importRoutes(fastify: FastifyInstance) {
           continue;
         }
 
+        const txnId = randomUUID();
         db.insert(transactions)
           .values({
-            id: randomUUID(),
+            id: txnId,
             accountId,
             externalId: row.externalId,
             date: format(row.date, "yyyy-MM-dd"),
@@ -82,6 +90,23 @@ export async function importRoutes(fastify: FastifyInstance) {
           })
           .run();
         imported++;
+
+        // Apply category rules
+        const categoryId = matchCategory({
+          payee: row.payee,
+          memo: row.memo ?? null,
+        });
+        if (categoryId) {
+          db.insert(transactionCategories)
+            .values({
+              id: randomUUID(),
+              transactionId: txnId,
+              categoryId,
+              createdAt: new Date().toISOString(),
+            })
+            .run();
+          categorised++;
+        }
       }
 
       return reply.status(200).send({
@@ -90,6 +115,7 @@ export async function importRoutes(fastify: FastifyInstance) {
         accountSignature: result.accountSignature,
         imported,
         skipped,
+        categorised,
         total: result.rows.length,
       });
     },

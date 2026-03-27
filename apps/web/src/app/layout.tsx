@@ -12,6 +12,7 @@ const navItems = [
   { href: "/banks", label: "Banks" },
   { href: "/accounts", label: "Accounts" },
   { href: "/transactions", label: "Transactions" },
+  { href: "/categories", label: "Categories" },
 ];
 
 export default function RootLayout({

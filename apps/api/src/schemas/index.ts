@@ -29,3 +29,10 @@ export {
   type TransactionCategory,
   type CreateTransactionCategory,
 } from "./transaction-category.js";
+export {
+  CategoryRuleSchema,
+  CreateCategoryRuleSchema,
+  MatchTypeEnum,
+  type CategoryRule,
+  type CreateCategoryRule,
+} from "./category-rule.js";

@@ -3,8 +3,16 @@ import { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod/v4";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { transactions } from "../db/schema/index.js";
+import {
+  transactions,
+  transactionCategories,
+  categories,
+} from "../db/schema/index.js";
 import { TransactionSchema } from "../schemas/index.js";
+
+const TransactionWithCategorySchema = TransactionSchema.extend({
+  categoryName: z.string().nullable(),
+});
 
 export async function transactionRoutes(fastify: FastifyInstance) {
   const server = fastify.withTypeProvider<ZodTypeProvider>();
@@ -22,7 +30,7 @@ export async function transactionRoutes(fastify: FastifyInstance) {
           to: z.iso.date().optional(),
         }),
         response: {
-          200: z.array(TransactionSchema),
+          200: z.array(TransactionWithCategorySchema),
         },
       },
     },
@@ -40,14 +48,34 @@ export async function transactionRoutes(fastify: FastifyInstance) {
         conditions.push(lte(transactions.date, to));
       }
 
+      const query = db
+        .select({
+          id: transactions.id,
+          accountId: transactions.accountId,
+          externalId: transactions.externalId,
+          date: transactions.date,
+          dateProcessed: transactions.dateProcessed,
+          type: transactions.type,
+          payee: transactions.payee,
+          memo: transactions.memo,
+          amount: transactions.amount,
+          createdAt: transactions.createdAt,
+          categoryName: categories.name,
+        })
+        .from(transactions)
+        .leftJoin(
+          transactionCategories,
+          eq(transactions.id, transactionCategories.transactionId),
+        )
+        .leftJoin(
+          categories,
+          eq(transactionCategories.categoryId, categories.id),
+        );
+
       if (conditions.length > 0) {
-        return db
-          .select()
-          .from(transactions)
-          .where(and(...conditions))
-          .all();
+        return query.where(and(...conditions)).all();
       }
-      return db.select().from(transactions).all();
+      return query.all();
     },
   );
 

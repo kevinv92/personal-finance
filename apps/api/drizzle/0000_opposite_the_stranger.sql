@@ -24,6 +24,17 @@ CREATE TABLE `categories` (
 	`created_at` text NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE `category_rules` (
+	`id` text PRIMARY KEY NOT NULL,
+	`category_id` text NOT NULL,
+	`match_field` text NOT NULL,
+	`match_type` text NOT NULL,
+	`match_values` text NOT NULL,
+	`sort_order` integer DEFAULT 0 NOT NULL,
+	`created_at` text NOT NULL,
+	FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
 CREATE TABLE `transaction_categories` (
 	`id` text PRIMARY KEY NOT NULL,
 	`transaction_id` text NOT NULL,

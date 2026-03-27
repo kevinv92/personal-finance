@@ -50,6 +50,7 @@ export interface Transaction {
   payee: string;
   memo: string | null;
   amount: number;
+  categoryName: string | null;
   createdAt: string;
 }
 
@@ -57,6 +58,16 @@ export interface Category {
   id: string;
   name: string;
   parentId: string | null;
+  createdAt: string;
+}
+
+export interface CategoryRule {
+  id: string;
+  categoryId: string;
+  matchField: "payee" | "memo" | "both";
+  matchType: "contains" | "exact" | "startsWith";
+  matchValues: string[];
+  sortOrder: number;
   createdAt: string;
 }
 
@@ -70,3 +81,19 @@ export const getTransactions = (accountId?: string) =>
     `/transactions${accountId ? `?accountId=${accountId}` : ""}`,
   );
 export const getCategories = () => apiFetch<Category[]>("/categories");
+export const getCategoryRules = () =>
+  apiFetch<CategoryRule[]>("/category-rules");
+export const createCategoryRule = (
+  rule: Omit<CategoryRule, "id" | "sortOrder" | "createdAt">,
+) =>
+  apiFetch<CategoryRule>("/category-rules", {
+    method: "POST",
+    body: JSON.stringify(rule),
+  });
+export const deleteCategoryRule = (id: string) =>
+  apiFetch<void>(`/category-rules/${id}`, { method: "DELETE" });
+export const applyCategoryRules = (mode: "uncategorised" | "all") =>
+  apiFetch<{ categorised: number; total: number }>(
+    `/category-rules/apply?mode=${mode}`,
+    { method: "POST", body: JSON.stringify({}) },
+  );

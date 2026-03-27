@@ -8,28 +8,49 @@ import {
   accounts,
   transactions,
   transactionCategories,
+  csvMappers,
 } from "../db/schema/index.js";
 import { matchCategory } from "../lib/category-matcher.js";
-import { CSVParser, csvMapperPresets } from "../lib/csv-parser/index.js";
+import { CSVParser } from "../lib/csv-parser/index.js";
 import type { CSVMapperConfig } from "../lib/csv-parser/index.js";
 
+function dbMapperToConfig(
+  mapper: typeof csvMappers.$inferSelect,
+): CSVMapperConfig {
+  return {
+    name: mapper.name,
+    bank: mapper.bank,
+    accountType: mapper.accountType as CSVMapperConfig["accountType"],
+    csvSignature: mapper.csvSignature,
+    metaLines: { start: mapper.metaLineStart, end: mapper.metaLineEnd },
+    headerRow: mapper.headerRow,
+    dataStartRow: mapper.dataStartRow,
+    accountMetaLine: mapper.accountMetaLine,
+    delimiter: mapper.delimiter ?? ",",
+    columnMap: mapper.columnMap as CSVMapperConfig["columnMap"],
+    dateFormat: mapper.dateFormat ?? undefined,
+    invertAmount: mapper.invertAmount,
+  };
+}
+
 export async function importRoutes(fastify: FastifyInstance) {
-  // List available CSV mapper presets
+  // List available CSV mappers from DB
   fastify.get(
     "/presets",
     {
       schema: {
         tags: ["Import"],
-        description: "List available CSV mapper presets",
+        description: "List available CSV mapper configurations",
       },
     },
     async () => {
-      return Object.entries(csvMapperPresets).map(([key, preset]) => ({
-        key,
-        name: preset.name,
-        bank: preset.bank,
-        accountType: preset.accountType,
-        csvSignature: preset.csvSignature,
+      const mappers = db.select().from(csvMappers).all();
+      return mappers.map((m) => ({
+        key: m.id,
+        name: m.name,
+        bank: m.bank,
+        accountType: m.accountType,
+        csvSignature: m.csvSignature,
       }));
     },
   );
@@ -52,26 +73,28 @@ export async function importRoutes(fastify: FastifyInstance) {
       const content = await file.toBuffer();
       const csvContent = content.toString("utf-8");
 
-      // Match preset by csvSignature
-      const preset = findPreset(csvContent);
-      if (!preset) {
+      // Match mapper by csvSignature from DB
+      const mapper = findMapper(csvContent);
+      if (!mapper) {
         return reply.status(422).send({
           message:
-            "No matching CSV mapper preset found. The CSV format is not recognised.",
+            "No matching CSV mapper found. The CSV format is not recognised.",
         });
       }
 
+      const config = dbMapperToConfig(mapper);
+
       // Parse CSV
-      const parser = new CSVParser(preset);
+      const parser = new CSVParser(config);
       const result = parser.parse(csvContent);
 
       // Find or create bank
-      const bankId = findOrCreateBank(preset.bank);
+      const bankId = findOrCreateBank(config.bank);
 
       // Find or create account
       const accountId = findOrCreateAccount(
         bankId,
-        preset,
+        config,
         result.accountSignature,
       );
 
@@ -130,8 +153,8 @@ export async function importRoutes(fastify: FastifyInstance) {
       }
 
       return reply.status(200).send({
-        preset: preset.name,
-        bank: preset.bank,
+        preset: config.name,
+        bank: config.bank,
         accountSignature: result.accountSignature,
         imported,
         skipped,
@@ -142,12 +165,14 @@ export async function importRoutes(fastify: FastifyInstance) {
   );
 }
 
-function findPreset(content: string): CSVMapperConfig | null {
+function findMapper(content: string): typeof csvMappers.$inferSelect | null {
+  const mappers = db.select().from(csvMappers).all();
   const lines = content.split("\n");
-  for (const preset of Object.values(csvMapperPresets)) {
-    const metaLine = lines[preset.accountMetaLine - 1]?.trim();
-    if (metaLine === preset.csvSignature) {
-      return preset;
+
+  for (const mapper of mappers) {
+    const metaLine = lines[mapper.accountMetaLine - 1]?.trim();
+    if (metaLine === mapper.csvSignature) {
+      return mapper;
     }
   }
   return null;
@@ -171,7 +196,7 @@ function findOrCreateBank(bankName: string): string {
 
 function findOrCreateAccount(
   bankId: string,
-  preset: CSVMapperConfig,
+  config: CSVMapperConfig,
   signature: string | null,
 ): string {
   if (signature) {
@@ -189,8 +214,8 @@ function findOrCreateAccount(
     .values({
       id,
       bankId,
-      name: preset.name,
-      type: preset.accountType,
+      name: config.name,
+      type: config.accountType,
       currency: "NZD",
       csvSignature: signature,
       isActive: true,

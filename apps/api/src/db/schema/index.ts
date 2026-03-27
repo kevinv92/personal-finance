@@ -7,3 +7,4 @@ export { categoryRules } from "./category-rules.js";
 export { savedFilters } from "./saved-filters.js";
 export { dashboards } from "./dashboards.js";
 export { dashboardWidgets } from "./dashboard-widgets.js";
+export { csvMappers } from "./csv-mappers.js";

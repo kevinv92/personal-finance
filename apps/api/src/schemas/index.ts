@@ -69,3 +69,10 @@ export {
   type TrendConfig,
   type TransactionListConfig,
 } from "./widget-config.js";
+export {
+  CsvMapperSchema,
+  CreateCsvMapperSchema,
+  TransactionFieldEnum,
+  type CsvMapper,
+  type CreateCsvMapper,
+} from "./csv-mapper.js";

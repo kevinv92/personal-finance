@@ -191,6 +191,33 @@ export interface CSVMapperPreset {
   csvSignature: string;
 }
 
+export type TransactionField =
+  | "date"
+  | "dateProcessed"
+  | "externalId"
+  | "type"
+  | "payee"
+  | "memo"
+  | "amount";
+
+export interface CsvMapper {
+  id: string;
+  name: string;
+  bank: string;
+  accountType: "checking" | "savings" | "credit";
+  csvSignature: string;
+  metaLineStart: number;
+  metaLineEnd: number;
+  headerRow: number;
+  dataStartRow: number;
+  accountMetaLine: number;
+  delimiter: string | null;
+  columnMap: Record<string, TransactionField>;
+  dateFormat: string | null;
+  invertAmount: boolean;
+  createdAt: string;
+}
+
 export interface ImportResult {
   preset: string;
   bank: string;
@@ -288,6 +315,24 @@ export const removeDashboardWidget = (dashboardId: string, widgetId: string) =>
   });
 export const getImportPresets = () =>
   apiFetch<CSVMapperPreset[]>("/import/presets");
+export const getCsvMappers = () => apiFetch<CsvMapper[]>("/csv-mappers");
+export const getCsvMapper = (id: string) =>
+  apiFetch<CsvMapper>(`/csv-mappers/${id}`);
+export const createCsvMapper = (mapper: Omit<CsvMapper, "id" | "createdAt">) =>
+  apiFetch<CsvMapper>("/csv-mappers", {
+    method: "POST",
+    body: JSON.stringify(mapper),
+  });
+export const updateCsvMapper = (
+  id: string,
+  mapper: Omit<CsvMapper, "id" | "createdAt">,
+) =>
+  apiFetch<CsvMapper>(`/csv-mappers/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(mapper),
+  });
+export const deleteCsvMapper = (id: string) =>
+  apiFetch<void>(`/csv-mappers/${id}`, { method: "DELETE" });
 export const importCSV = async (file: File): Promise<ImportResult> => {
   const formData = new FormData();
   formData.append("file", file);

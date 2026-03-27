@@ -1,10 +1,17 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
-import { getTransactions, getAccounts, type Transaction } from "@/lib/api";
+import {
+  getTransactions,
+  getAccounts,
+  type Transaction,
+  type FilterCondition,
+} from "@/lib/api";
 import { DataTable } from "@/components/data-table";
+import { FilterBar } from "@/components/filter-bar";
+import { createFilterFn } from "@/lib/filter-engine";
 
 type TransactionRow = Transaction & { accountName: string };
 const columnHelper = createColumnHelper<TransactionRow>();
@@ -58,12 +65,14 @@ export default function TransactionsPage() {
     queryFn: () => getAccounts(),
   });
 
+  const [conditions, setConditions] = useState<FilterCondition[]>([]);
+
   const accountNameMap = useMemo(
     () => new Map(accounts.map((a) => [a.id, a.name])),
     [accounts],
   );
 
-  const data = useMemo(
+  const allRows = useMemo(
     () =>
       transactions.map((txn) => ({
         ...txn,
@@ -72,19 +81,32 @@ export default function TransactionsPage() {
     [transactions, accountNameMap],
   );
 
+  const filteredData = useMemo(() => {
+    if (conditions.length === 0) return allRows;
+    const filterFn = createFilterFn(conditions);
+    return allRows.filter(filterFn);
+  }, [allRows, conditions]);
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-6">Transactions</h2>
 
+      <FilterBar conditions={conditions} onChange={setConditions} />
+
       {isLoading && <p className="text-gray-500">Loading...</p>}
       {error && <p className="text-red-600">Error: {error.message}</p>}
 
-      {!isLoading && !error && data.length === 0 && (
+      {!isLoading && !error && filteredData.length === 0 && (
         <p className="text-gray-500">No transactions found.</p>
       )}
 
-      {data.length > 0 && (
-        <DataTable data={data} columns={columns} searchable pageSize={50} />
+      {filteredData.length > 0 && (
+        <DataTable
+          data={filteredData}
+          columns={columns}
+          searchable
+          pageSize={50}
+        />
       )}
     </div>
   );

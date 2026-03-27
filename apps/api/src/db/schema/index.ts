@@ -4,3 +4,4 @@ export { transactions } from "./transactions.js";
 export { categories } from "./categories.js";
 export { transactionCategories } from "./transaction-categories.js";
 export { categoryRules } from "./category-rules.js";
+export { savedFilters } from "./saved-filters.js";

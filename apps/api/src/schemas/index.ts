@@ -36,3 +36,11 @@ export {
   type CategoryRule,
   type CreateCategoryRule,
 } from "./category-rule.js";
+export {
+  FilterConditionSchema,
+  SavedFilterSchema,
+  CreateSavedFilterSchema,
+  type FilterCondition,
+  type SavedFilter,
+  type CreateSavedFilter,
+} from "./saved-filter.js";

@@ -71,6 +71,44 @@ export interface CategoryRule {
   createdAt: string;
 }
 
+export type FilterCondition =
+  | {
+      field: "date";
+      operator: "relative";
+      value:
+        | "last7days"
+        | "last30days"
+        | "lastMonth"
+        | "thisMonth"
+        | "lastQuarter"
+        | "thisQuarter"
+        | "lastYear"
+        | "thisYear";
+    }
+  | { field: "date"; operator: "between"; value: { from: string; to: string } }
+  | {
+      field: "payee" | "memo";
+      operator: "contains" | "equals" | "startsWith";
+      value: string[];
+    }
+  | {
+      field: "categoryName" | "accountName";
+      operator: "equals" | "in";
+      value: string | string[];
+    }
+  | {
+      field: "amount";
+      operator: "gt" | "lt" | "between";
+      value: number | { min: number; max: number };
+    };
+
+export interface SavedFilter {
+  id: string;
+  name: string;
+  conditions: FilterCondition[];
+  createdAt: string;
+}
+
 // --- API functions ---
 
 export const getBanks = () => apiFetch<Bank[]>("/banks");
@@ -97,3 +135,13 @@ export const applyCategoryRules = (mode: "uncategorised" | "all") =>
     `/category-rules/apply?mode=${mode}`,
     { method: "POST", body: JSON.stringify({}) },
   );
+export const getSavedFilters = () => apiFetch<SavedFilter[]>("/saved-filters");
+export const createSavedFilter = (
+  filter: Omit<SavedFilter, "id" | "createdAt">,
+) =>
+  apiFetch<SavedFilter>("/saved-filters", {
+    method: "POST",
+    body: JSON.stringify(filter),
+  });
+export const deleteSavedFilter = (id: string) =>
+  apiFetch<void>(`/saved-filters/${id}`, { method: "DELETE" });

@@ -35,6 +35,13 @@ CREATE TABLE `category_rules` (
 	FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE TABLE `saved_filters` (
+	`id` text PRIMARY KEY NOT NULL,
+	`name` text NOT NULL,
+	`conditions` text NOT NULL,
+	`created_at` text NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `transaction_categories` (
 	`id` text PRIMARY KEY NOT NULL,
 	`transaction_id` text NOT NULL,

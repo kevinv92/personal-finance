@@ -53,16 +53,8 @@ export interface Transaction {
   createdAt: string;
 }
 
-export interface CategoryScheme {
-  id: string;
-  name: string;
-  isActive: boolean;
-  createdAt: string;
-}
-
 export interface Category {
   id: string;
-  schemeId: string;
   name: string;
   parentId: string | null;
   createdAt: string;
@@ -77,7 +69,4 @@ export const getTransactions = (accountId?: string) =>
   apiFetch<Transaction[]>(
     `/transactions${accountId ? `?accountId=${accountId}` : ""}`,
   );
-export const getCategorySchemes = () =>
-  apiFetch<CategoryScheme[]>("/category-schemes");
-export const getCategories = (schemeId?: string) =>
-  apiFetch<Category[]>(`/categories${schemeId ? `?schemeId=${schemeId}` : ""}`);
+export const getCategories = () => apiFetch<Category[]>("/categories");

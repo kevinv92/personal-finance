@@ -18,12 +18,6 @@ export {
   type CreateTransaction,
 } from "./transaction.js";
 export {
-  CategorySchemeSchema,
-  CreateCategorySchemeSchema,
-  type CategoryScheme,
-  type CreateCategoryScheme,
-} from "./category-scheme.js";
-export {
   CategorySchema,
   CreateCategorySchema,
   type Category,

@@ -2,12 +2,7 @@ import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { randomUUID } from "crypto";
 import { eq } from "drizzle-orm";
-import {
-  banks,
-  accounts,
-  categorySchemes,
-  categories,
-} from "./schema/index.js";
+import { banks, accounts, categories } from "./schema/index.js";
 import { csvMapperPresets } from "../lib/csv-parser/index.js";
 
 const sqlite = new Database("local.db");
@@ -55,78 +50,23 @@ for (const preset of Object.values(csvMapperPresets)) {
   }
 }
 
-// Category Scheme: Simple
-const simpleSchemeId = randomUUID();
-db.insert(categorySchemes)
-  .values([
-    { id: simpleSchemeId, name: "Simple", isActive: true, createdAt: now },
-  ])
-  .run();
-
+// Categories
 const foodId = randomUUID();
 
 db.insert(categories)
   .values([
-    {
-      id: randomUUID(),
-      schemeId: simpleSchemeId,
-      name: "Income",
-      parentId: null,
-      createdAt: now,
-    },
-    {
-      id: foodId,
-      schemeId: simpleSchemeId,
-      name: "Food & Drink",
-      parentId: null,
-      createdAt: now,
-    },
-    {
-      id: randomUUID(),
-      schemeId: simpleSchemeId,
-      name: "Groceries",
-      parentId: foodId,
-      createdAt: now,
-    },
-    {
-      id: randomUUID(),
-      schemeId: simpleSchemeId,
-      name: "Eating Out",
-      parentId: foodId,
-      createdAt: now,
-    },
-    {
-      id: randomUUID(),
-      schemeId: simpleSchemeId,
-      name: "Transport",
-      parentId: null,
-      createdAt: now,
-    },
-    {
-      id: randomUUID(),
-      schemeId: simpleSchemeId,
-      name: "Subscriptions",
-      parentId: null,
-      createdAt: now,
-    },
-    {
-      id: randomUUID(),
-      schemeId: simpleSchemeId,
-      name: "Shopping",
-      parentId: null,
-      createdAt: now,
-    },
-    {
-      id: randomUUID(),
-      schemeId: simpleSchemeId,
-      name: "Transfers",
-      parentId: null,
-      createdAt: now,
-    },
+    { id: randomUUID(), name: "Income", parentId: null, createdAt: now },
+    { id: foodId, name: "Food & Drink", parentId: null, createdAt: now },
+    { id: randomUUID(), name: "Groceries", parentId: foodId, createdAt: now },
+    { id: randomUUID(), name: "Eating Out", parentId: foodId, createdAt: now },
+    { id: randomUUID(), name: "Transport", parentId: null, createdAt: now },
+    { id: randomUUID(), name: "Subscriptions", parentId: null, createdAt: now },
+    { id: randomUUID(), name: "Shopping", parentId: null, createdAt: now },
+    { id: randomUUID(), name: "Transfers", parentId: null, createdAt: now },
   ])
   .run();
 
 console.log("Seed complete:");
 console.log(`  ${bankCount.size} bank(s)`);
 console.log(`  ${accountCount} account(s)`);
-console.log("  1 category scheme with 8 categories");
+console.log("  8 categories");

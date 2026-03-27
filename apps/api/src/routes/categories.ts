@@ -2,7 +2,6 @@ import { FastifyInstance } from "fastify";
 import { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod/v4";
 import { randomUUID } from "crypto";
-import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { categories } from "../db/schema/index.js";
 import { CategorySchema, CreateCategorySchema } from "../schemas/index.js";
@@ -15,24 +14,13 @@ export async function categoryRoutes(fastify: FastifyInstance) {
     {
       schema: {
         tags: ["Categories"],
-        description: "List categories, optionally filtered by scheme",
-        querystring: z.object({
-          schemeId: z.uuid().optional(),
-        }),
+        description: "List all categories",
         response: {
           200: z.array(CategorySchema),
         },
       },
     },
-    async (request) => {
-      const { schemeId } = request.query;
-      if (schemeId) {
-        return db
-          .select()
-          .from(categories)
-          .where(eq(categories.schemeId, schemeId))
-          .all();
-      }
+    async () => {
       return db.select().from(categories).all();
     },
   );

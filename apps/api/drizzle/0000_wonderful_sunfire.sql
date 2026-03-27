@@ -19,17 +19,8 @@ CREATE TABLE `banks` (
 --> statement-breakpoint
 CREATE TABLE `categories` (
 	`id` text PRIMARY KEY NOT NULL,
-	`scheme_id` text NOT NULL,
 	`name` text NOT NULL,
 	`parent_id` text,
-	`created_at` text NOT NULL,
-	FOREIGN KEY (`scheme_id`) REFERENCES `category_schemes`(`id`) ON UPDATE no action ON DELETE no action
-);
---> statement-breakpoint
-CREATE TABLE `category_schemes` (
-	`id` text PRIMARY KEY NOT NULL,
-	`name` text NOT NULL,
-	`is_active` integer DEFAULT false NOT NULL,
 	`created_at` text NOT NULL
 );
 --> statement-breakpoint

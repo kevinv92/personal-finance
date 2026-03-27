@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "98dd9719-c95e-4dc4-9277-7bdfe73a06ad",
+  "id": "13ab7218-0877-46c8-9597-c709fcdb1628",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "accounts": {
@@ -298,7 +298,18 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_txn_categories_transaction_id": {
+          "name": "idx_txn_categories_transaction_id",
+          "columns": ["transaction_id"],
+          "isUnique": false
+        },
+        "idx_txn_categories_category_id": {
+          "name": "idx_txn_categories_category_id",
+          "columns": ["category_id"],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "transaction_categories_transaction_id_transactions_id_fk": {
           "name": "transaction_categories_transaction_id_transactions_id_fk",
@@ -397,7 +408,23 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_transactions_account_id": {
+          "name": "idx_transactions_account_id",
+          "columns": ["account_id"],
+          "isUnique": false
+        },
+        "idx_transactions_date": {
+          "name": "idx_transactions_date",
+          "columns": ["date"],
+          "isUnique": false
+        },
+        "idx_transactions_external_id": {
+          "name": "idx_transactions_external_id",
+          "columns": ["external_id"],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "transactions_account_id_accounts_id_fk": {
           "name": "transactions_account_id_accounts_id_fk",

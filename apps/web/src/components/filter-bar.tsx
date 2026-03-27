@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getCategories,
   getAccounts,
+  getBanks,
   getSavedFilters,
   createSavedFilter,
   type FilterCondition,
@@ -62,6 +63,10 @@ export function FilterBar({ conditions, onChange }: FilterBarProps) {
     queryKey: ["accounts"],
     queryFn: () => getAccounts(),
   });
+  const { data: banks = [] } = useQuery({
+    queryKey: ["banks"],
+    queryFn: getBanks,
+  });
   const { data: savedFilters = [] } = useQuery({
     queryKey: ["savedFilters"],
     queryFn: getSavedFilters,
@@ -93,6 +98,13 @@ export function FilterBar({ conditions, onChange }: FilterBarProps) {
       ? categoryCondition.value
       : [categoryCondition.value as string]
     : [];
+
+  const bankCondition = conditions.find((c) => c.field === "bankName");
+  const selectedBank = bankCondition
+    ? Array.isArray(bankCondition.value)
+      ? (bankCondition.value[0] ?? "")
+      : (bankCondition.value as string)
+    : "";
 
   const accountCondition = conditions.find((c) => c.field === "accountName");
   const selectedAccount = accountCondition
@@ -400,6 +412,39 @@ export function FilterBar({ conditions, onChange }: FilterBarProps) {
               )}
             </PopoverContent>
           </Popover>
+        </div>
+
+        {/* Bank filter */}
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">
+            Bank
+          </Label>
+          <Select
+            value={selectedBank || "all"}
+            onValueChange={(val: string | null) => {
+              if (!val || val === "all") {
+                updateConditions("bankName", null);
+              } else {
+                updateConditions("bankName", {
+                  field: "bankName",
+                  operator: "equals",
+                  value: val,
+                });
+              }
+            }}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              {banks.map((b) => (
+                <SelectItem key={b.id} value={b.name}>
+                  {b.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Account filter */}

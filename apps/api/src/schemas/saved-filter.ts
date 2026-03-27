@@ -31,7 +31,7 @@ const TextCondition = z.object({
 });
 
 const SelectCondition = z.object({
-  field: z.enum(["categoryName", "accountName"]),
+  field: z.enum(["categoryName", "bankName", "accountName"]),
   operator: z.enum(["equals", "in"]),
   value: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]),
 });

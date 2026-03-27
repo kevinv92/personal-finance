@@ -92,7 +92,7 @@ export type FilterCondition =
       value: string[];
     }
   | {
-      field: "categoryName" | "accountName";
+      field: "categoryName" | "bankName" | "accountName";
       operator: "equals" | "in";
       value: string | string[];
     }

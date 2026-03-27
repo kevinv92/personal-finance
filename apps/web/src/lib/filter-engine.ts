@@ -18,6 +18,7 @@ interface FilterableRow {
   payee: string;
   memo: string | null;
   categoryName: string | null;
+  bankName: string;
   accountName: string;
   amount: number;
 }
@@ -101,6 +102,12 @@ function matchesCondition(
         ? condition.value
         : [condition.value];
       return row.categoryName != null && values.includes(row.categoryName);
+    }
+    case "bankName": {
+      const values = Array.isArray(condition.value)
+        ? condition.value
+        : [condition.value];
+      return values.includes(row.bankName);
     }
     case "accountName": {
       const values = Array.isArray(condition.value)

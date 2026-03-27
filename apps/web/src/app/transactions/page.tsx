@@ -6,6 +6,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import {
   getTransactions,
   getAccounts,
+  getBanks,
   type Transaction,
   type FilterCondition,
 } from "@/lib/api";
@@ -13,7 +14,7 @@ import { DataTable } from "@/components/data-table";
 import { FilterBar } from "@/components/filter-bar";
 import { createFilterFn } from "@/lib/filter-engine";
 
-type TransactionRow = Transaction & { accountName: string };
+type TransactionRow = Transaction & { accountName: string; bankName: string };
 const columnHelper = createColumnHelper<TransactionRow>();
 
 const formatAmount = (amount: number) => {
@@ -35,6 +36,7 @@ const columns = [
     header: "Category",
     cell: (info) => info.getValue() ?? "—",
   }),
+  columnHelper.accessor("bankName", { header: "Bank" }),
   columnHelper.accessor("accountName", { header: "Account" }),
   columnHelper.accessor("amount", {
     header: "Amount",
@@ -65,20 +67,36 @@ export default function TransactionsPage() {
     queryFn: () => getAccounts(),
   });
 
+  const { data: banks = [] } = useQuery({
+    queryKey: ["banks"],
+    queryFn: getBanks,
+  });
+
   const [conditions, setConditions] = useState<FilterCondition[]>([]);
 
-  const accountNameMap = useMemo(
-    () => new Map(accounts.map((a) => [a.id, a.name])),
+  const accountMap = useMemo(
+    () => new Map(accounts.map((a) => [a.id, a])),
     [accounts],
+  );
+
+  const bankNameMap = useMemo(
+    () => new Map(banks.map((b) => [b.id, b.name])),
+    [banks],
   );
 
   const allRows = useMemo(
     () =>
-      transactions.map((txn) => ({
-        ...txn,
-        accountName: accountNameMap.get(txn.accountId) ?? txn.accountId,
-      })),
-    [transactions, accountNameMap],
+      transactions.map((txn) => {
+        const account = accountMap.get(txn.accountId);
+        return {
+          ...txn,
+          accountName: account?.name ?? txn.accountId,
+          bankName: account
+            ? (bankNameMap.get(account.bankId) ?? account.bankId)
+            : "",
+        };
+      }),
+    [transactions, accountMap, bankNameMap],
   );
 
   const filteredData = useMemo(() => {

@@ -51,6 +51,8 @@ CREATE TABLE `transaction_categories` (
 	FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE INDEX `idx_txn_categories_transaction_id` ON `transaction_categories` (`transaction_id`);--> statement-breakpoint
+CREATE INDEX `idx_txn_categories_category_id` ON `transaction_categories` (`category_id`);--> statement-breakpoint
 CREATE TABLE `transactions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`account_id` text NOT NULL,
@@ -64,3 +66,7 @@ CREATE TABLE `transactions` (
 	`created_at` text NOT NULL,
 	FOREIGN KEY (`account_id`) REFERENCES `accounts`(`id`) ON UPDATE no action ON DELETE no action
 );
+--> statement-breakpoint
+CREATE INDEX `idx_transactions_account_id` ON `transactions` (`account_id`);--> statement-breakpoint
+CREATE INDEX `idx_transactions_date` ON `transactions` (`date`);--> statement-breakpoint
+CREATE INDEX `idx_transactions_external_id` ON `transactions` (`external_id`);

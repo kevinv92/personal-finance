@@ -22,6 +22,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { CsvWizard } from "./csv-wizard";
 
 const TRANSACTION_FIELDS: { value: TransactionField; label: string }[] = [
   { value: "date", label: "Date" },
@@ -47,6 +48,7 @@ export default function ImportsPage() {
   const [results, setResults] = useState<ImportResult[]>([]);
   const [editMapper, setEditMapper] = useState<CsvMapper | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
 
   const handleImportSuccess = useCallback((result: ImportResult) => {
     setResults((prev) => [result, ...prev]);
@@ -56,7 +58,18 @@ export default function ImportsPage() {
     <div>
       <h2 className="text-2xl font-bold mb-6">Import Transactions</h2>
 
-      <DropZone onSuccess={handleImportSuccess} />
+      <div className="flex gap-4 items-start">
+        <div className="flex-1">
+          <DropZone onSuccess={handleImportSuccess} />
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => setShowWizard(true)}
+          className="shrink-0 mt-4"
+        >
+          New CSV Format
+        </Button>
+      </div>
 
       <h3 className="text-lg font-semibold mt-8 mb-4">
         Or drop onto a specific mapper
@@ -132,6 +145,13 @@ export default function ImportsPage() {
           </div>
         )}
       </div>
+
+      {showWizard && (
+        <CsvWizard
+          onClose={() => setShowWizard(false)}
+          onImportSuccess={handleImportSuccess}
+        />
+      )}
 
       {(editMapper || showCreate) && (
         <MapperDialog

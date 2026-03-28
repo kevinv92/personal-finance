@@ -55,6 +55,115 @@ export async function importRoutes(fastify: FastifyInstance) {
     },
   );
 
+  // Preview a CSV file — returns raw lines and auto-detect result
+  fastify.post(
+    "/preview",
+    {
+      schema: {
+        tags: ["Import"],
+        description: "Preview a CSV file without importing",
+        consumes: ["multipart/form-data"],
+      },
+    },
+    async (request, reply) => {
+      const file = await request.file();
+      if (!file) {
+        return reply.status(400).send({ message: "No file uploaded" });
+      }
+
+      const content = await file.toBuffer();
+      const csvContent = content.toString("utf-8");
+      const lines = csvContent.split("\n").map((l) => l.trimEnd());
+
+      // Try to find a matching mapper
+      const mapper = findMapper(csvContent);
+
+      return {
+        fileName: file.filename,
+        totalLines: lines.length,
+        lines: lines.slice(0, 30),
+        matchedMapper: mapper ? { id: mapper.id, name: mapper.name } : null,
+      };
+    },
+  );
+
+  // Test parse a CSV with a given config — returns parsed rows without importing
+  fastify.post(
+    "/test-parse",
+    {
+      schema: {
+        tags: ["Import"],
+        description: "Test parse a CSV with given mapper config",
+        consumes: ["multipart/form-data"],
+      },
+    },
+    async (request, reply) => {
+      const data = await request.file();
+      if (!data) {
+        return reply.status(400).send({ message: "No file uploaded" });
+      }
+
+      const content = await data.toBuffer();
+      const csvContent = content.toString("utf-8");
+
+      // Config comes as a field in the multipart form
+      const configField = (request.body as Record<string, { value: string }>)
+        ?.config;
+      if (!configField?.value) {
+        return reply
+          .status(400)
+          .send({ message: "Missing config field in form data" });
+      }
+
+      let config: CSVMapperConfig;
+      try {
+        const raw = JSON.parse(configField.value);
+        config = {
+          name: raw.name ?? "Test",
+          bank: raw.bank ?? "Unknown",
+          accountType: raw.accountType ?? "checking",
+          csvSignature: raw.csvSignature ?? "",
+          metaLines: {
+            start: raw.metaLineStart ?? 1,
+            end: raw.metaLineEnd ?? 1,
+          },
+          headerRow: raw.headerRow ?? 1,
+          dataStartRow: raw.dataStartRow ?? 2,
+          accountMetaLine: raw.accountMetaLine ?? 1,
+          delimiter: raw.delimiter ?? ",",
+          columnMap: raw.columnMap ?? {},
+          dateFormat: raw.dateFormat ?? undefined,
+          invertAmount: raw.invertAmount ?? false,
+        };
+      } catch {
+        return reply.status(400).send({ message: "Invalid config JSON" });
+      }
+
+      try {
+        const parser = new CSVParser(config);
+        const result = parser.parse(csvContent);
+
+        return {
+          meta: result.meta,
+          accountSignature: result.accountSignature,
+          headers: result.headers,
+          rowCount: result.rows.length,
+          sampleRows: result.rows.slice(0, 5).map((r) => ({
+            ...r,
+            date: r.date.toISOString().split("T")[0],
+            dateProcessed: r.dateProcessed
+              ? r.dateProcessed.toISOString().split("T")[0]
+              : null,
+          })),
+        };
+      } catch (err) {
+        return reply.status(422).send({
+          message: `Parse error: ${err instanceof Error ? err.message : String(err)}`,
+        });
+      }
+    },
+  );
+
   fastify.post(
     "/csv",
     {

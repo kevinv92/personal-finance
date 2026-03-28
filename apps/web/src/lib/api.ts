@@ -315,6 +315,61 @@ export const removeDashboardWidget = (dashboardId: string, widgetId: string) =>
   });
 export const getImportPresets = () =>
   apiFetch<CSVMapperPreset[]>("/import/presets");
+
+export interface CsvPreviewResult {
+  fileName: string;
+  totalLines: number;
+  lines: string[];
+  matchedMapper: { id: string; name: string } | null;
+}
+
+export interface TestParseResult {
+  meta: string[];
+  accountSignature: string | null;
+  headers: string[];
+  rowCount: number;
+  sampleRows: {
+    date: string;
+    dateProcessed: string | null;
+    externalId: string;
+    type: string;
+    payee: string;
+    memo?: string;
+    amount: number;
+  }[];
+}
+
+export const previewCSV = async (file: File): Promise<CsvPreviewResult> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(`${API_BASE}/import/preview`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(err.message || `Preview failed: ${res.status}`);
+  }
+  return res.json();
+};
+
+export const testParseCSV = async (
+  file: File,
+  config: Record<string, unknown>,
+): Promise<TestParseResult> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("config", JSON.stringify(config));
+  const res = await fetch(`${API_BASE}/import/test-parse`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(err.message || `Test parse failed: ${res.status}`);
+  }
+  return res.json();
+};
 export const getCsvMappers = () => apiFetch<CsvMapper[]>("/csv-mappers");
 export const getCsvMapper = (id: string) =>
   apiFetch<CsvMapper>(`/csv-mappers/${id}`);

@@ -20,8 +20,10 @@ export {
 export {
   CategorySchema,
   CreateCategorySchema,
+  UpdateCategorySchema,
   type Category,
   type CreateCategory,
+  type UpdateCategory,
 } from "./category.js";
 export {
   TransactionCategorySchema,
@@ -76,3 +78,12 @@ export {
   type CsvMapper,
   type CreateCsvMapper,
 } from "./csv-mapper.js";
+export {
+  RecurringSchema,
+  CreateRecurringSchema,
+  UpdateRecurringSchema,
+  FrequencyEnum,
+  type Recurring,
+  type CreateRecurring,
+  type UpdateRecurring,
+} from "./recurring.js";

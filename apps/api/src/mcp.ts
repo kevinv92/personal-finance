@@ -109,6 +109,66 @@ server.tool(
 );
 
 server.tool(
+  "create_category",
+  "Create a new category. Optionally set parentId to make it a subcategory.",
+  {
+    name: z.string().min(1).describe("Category name"),
+    parentId: z
+      .string()
+      .optional()
+      .describe("Parent category ID (for subcategories)"),
+  },
+  async ({ name, parentId }) => {
+    const category = await api<unknown>("/categories", {
+      method: "POST",
+      body: JSON.stringify({ name, parentId }),
+    });
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: `Category created:\n${JSON.stringify(category, null, 2)}`,
+        },
+      ],
+    };
+  },
+);
+
+server.tool(
+  "update_category",
+  "Update an existing category's name or parent.",
+  {
+    id: z.string().describe("Category ID to update"),
+    name: z.string().optional().describe("New category name"),
+    parentId: z
+      .string()
+      .nullable()
+      .optional()
+      .describe("New parent category ID (null to make top-level)"),
+  },
+  async ({ id, name, parentId }) => {
+    const body: Record<string, unknown> = {};
+    if (name !== undefined) body.name = name;
+    if (parentId !== undefined) body.parentId = parentId;
+
+    const category = await api<unknown>(`/categories/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    });
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: `Category updated:\n${JSON.stringify(category, null, 2)}`,
+        },
+      ],
+    };
+  },
+);
+
+server.tool(
   "list_category_rules",
   "List all category rules in priority order. Rules auto-categorise transactions on import.",
   {},

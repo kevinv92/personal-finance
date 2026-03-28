@@ -54,6 +54,7 @@ export interface Transaction {
   payee: string;
   memo: string | null;
   amount: number;
+  recurringId: string | null;
   categoryName: string | null;
   createdAt: string;
 }
@@ -228,6 +229,24 @@ export interface ImportResult {
   total: number;
 }
 
+export type Frequency =
+  | "weekly"
+  | "fortnightly"
+  | "monthly"
+  | "quarterly"
+  | "annual";
+
+export interface Recurring {
+  id: string;
+  name: string;
+  matchKey: string | null;
+  expectedAmount: number | null;
+  frequency: Frequency;
+  categoryId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // --- API functions ---
 
 export const getBanks = () => apiFetch<Bank[]>("/banks");
@@ -312,6 +331,53 @@ export const updateDashboardWidget = (
 export const removeDashboardWidget = (dashboardId: string, widgetId: string) =>
   apiFetch<void>(`/dashboards/${dashboardId}/widgets/${widgetId}`, {
     method: "DELETE",
+  });
+export interface DetectedRecurring {
+  name: string;
+  frequency: Frequency;
+  confidence: number;
+  expectedAmount: number;
+  amountConsistent: boolean;
+  categoryId: string | null;
+  categoryName: string | null;
+  transactionCount: number;
+  transactionIds: string[];
+  recentTransactions: {
+    id: string;
+    date: string;
+    payee: string;
+    amount: number;
+  }[];
+  groupKey: string;
+}
+
+export const getRecurring = () => apiFetch<Recurring[]>("/recurring");
+export const detectRecurring = (minOccurrences = 2, amountTolerance = 0.1) =>
+  apiFetch<DetectedRecurring[]>(
+    `/recurring/detect?minOccurrences=${minOccurrences}&amountTolerance=${amountTolerance}`,
+    { method: "POST", body: JSON.stringify({}) },
+  );
+export const createRecurring = (
+  data: Omit<Recurring, "id" | "createdAt" | "updatedAt">,
+) =>
+  apiFetch<Recurring>("/recurring", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+export const updateRecurring = (
+  id: string,
+  data: Partial<Omit<Recurring, "id" | "createdAt" | "updatedAt">>,
+) =>
+  apiFetch<Recurring>(`/recurring/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+export const deleteRecurring = (id: string) =>
+  apiFetch<void>(`/recurring/${id}`, { method: "DELETE" });
+export const applyRecurring = (mode: "unlinked" | "all" = "all") =>
+  apiFetch<{ linked: number; total: number }>(`/recurring/apply?mode=${mode}`, {
+    method: "POST",
+    body: JSON.stringify({}),
   });
 export const getImportPresets = () =>
   apiFetch<CSVMapperPreset[]>("/import/presets");

@@ -8,6 +8,20 @@
       "when": 1774657440265,
       "tag": "0000_late_praxagora",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1774661470698,
+      "tag": "0001_magenta_swordsman",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1774662538888,
+      "tag": "0002_cheerful_sir_ram",
+      "breakpoints": true
     }
   ]
 }

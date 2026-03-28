@@ -19,6 +19,7 @@ import { savedFilterRoutes } from "./routes/saved-filters.js";
 import { dashboardRoutes } from "./routes/dashboards.js";
 import { csvMapperRoutes } from "./routes/csv-mappers.js";
 import { importRoutes } from "./routes/import.js";
+import { recurringRoutes } from "./routes/recurring.js";
 
 const server = Fastify({ logger: true });
 
@@ -59,6 +60,7 @@ await server.register(savedFilterRoutes, { prefix: "/api/saved-filters" });
 await server.register(dashboardRoutes, { prefix: "/api/dashboards" });
 await server.register(csvMapperRoutes, { prefix: "/api/csv-mappers" });
 await server.register(importRoutes, { prefix: "/api/import" });
+await server.register(recurringRoutes, { prefix: "/api/recurring" });
 
 server.get("/api/debug/routes", async () => {
   return server.printRoutes({ commonPrefix: false });

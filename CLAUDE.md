@@ -73,7 +73,22 @@ pnpm mcp           # start MCP server (requires API running on port 3001)
 
 An MCP server is available for AI assistants to interact with the API. It exposes tools for listing transactions, categories, rules, creating rules, and applying categorisation. Requires the API to be running (`pnpm dev`).
 
-Configured in `.claude/settings.local.json` — Claude Code will auto-detect it.
+Configured in `.mcp.json` at the project root — Claude Code will auto-detect it.
+
+### Recurring Detection
+
+The recurring system detects recurring transactions (subscriptions, bills, salary, etc.) by:
+
+- Grouping transactions by a composite `payee + memo` key (memo is included when meaningful, excluded when generic like card numbers)
+- Detecting frequency via median interval analysis (weekly/fortnightly/monthly/quarterly/annual)
+- Checking amount consistency within a configurable tolerance (default 10%)
+
+Key concepts:
+
+- `matchKey` on the `recurring` table stores the grouping pattern used for matching (format: `PAYEE` or `PAYEE|||MEMO`)
+- `recurringId` on the `transactions` table links transactions to their recurring item
+- Detection logic lives in `apps/api/src/lib/recurring-detection.ts`
+- Filter state on `/transactions` is URL-synced via base64-encoded `?filters=` query param (`apps/web/src/lib/filter-url.ts`)
 
 ### Testing
 

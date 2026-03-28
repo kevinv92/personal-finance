@@ -1,0 +1,1 @@
+ALTER TABLE `recurring` ADD `match_key` text;

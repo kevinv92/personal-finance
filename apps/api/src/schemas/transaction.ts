@@ -10,6 +10,7 @@ export const TransactionSchema = z.object({
   payee: z.string().min(1),
   memo: z.string().nullable(),
   amount: z.number(),
+  recurringId: z.uuid().nullable(),
   createdAt: z.iso.datetime(),
 });
 

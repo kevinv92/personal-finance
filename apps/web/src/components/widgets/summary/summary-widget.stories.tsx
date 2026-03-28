@@ -14,6 +14,7 @@ const baseData: WidgetData = {
     payee: `Payee ${i}`,
     memo: null,
     amount: i % 5 === 0 ? 3667.37 : -(Math.random() * 200),
+    recurringId: null,
     categoryName: "Groceries",
     createdAt: new Date().toISOString(),
   })),

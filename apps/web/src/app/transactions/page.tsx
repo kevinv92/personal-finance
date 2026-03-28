@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { Suspense, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams, useRouter } from "next/navigation";
 import { createColumnHelper } from "@tanstack/react-table";
 import {
   getTransactions,
@@ -13,14 +14,11 @@ import {
 import { DataTable } from "@/components/data-table";
 import { FilterBar } from "@/components/filter-bar";
 import { createFilterFn } from "@/lib/filter-engine";
+import { encodeFilters, decodeFilters } from "@/lib/filter-url";
+import { formatAmount } from "@/lib/format";
 
 type TransactionRow = Transaction & { accountName: string; bankName: string };
 const columnHelper = createColumnHelper<TransactionRow>();
-
-const formatAmount = (amount: number) => {
-  const formatted = Math.abs(amount).toFixed(2);
-  return amount < 0 ? `-$${formatted}` : `$${formatted}`;
-};
 
 const columns = [
   columnHelper.accessor("date", { header: "Date" }),
@@ -43,7 +41,9 @@ const columns = [
     cell: (info) => {
       const amount = info.getValue();
       return (
-        <span className={amount < 0 ? "text-red-600" : "text-green-600"}>
+        <span
+          className={`tabular-nums ${amount < 0 ? "text-red-600" : "text-green-600"}`}
+        >
           {formatAmount(amount)}
         </span>
       );
@@ -53,6 +53,34 @@ const columns = [
 ];
 
 export default function TransactionsPage() {
+  return (
+    <Suspense fallback={<p className="text-gray-500">Loading...</p>}>
+      <TransactionsContent />
+    </Suspense>
+  );
+}
+
+function TransactionsContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const conditions = useMemo(
+    () => decodeFilters(searchParams.get("filters")),
+    [searchParams],
+  );
+
+  const setConditions = useCallback(
+    (next: FilterCondition[]) => {
+      const encoded = encodeFilters(next);
+      if (encoded) {
+        router.replace(`/transactions?filters=${encoded}`, { scroll: false });
+      } else {
+        router.replace("/transactions", { scroll: false });
+      }
+    },
+    [router],
+  );
+
   const {
     data: transactions = [],
     isLoading,
@@ -71,8 +99,6 @@ export default function TransactionsPage() {
     queryKey: ["banks"],
     queryFn: getBanks,
   });
-
-  const [conditions, setConditions] = useState<FilterCondition[]>([]);
 
   const accountMap = useMemo(
     () => new Map(accounts.map((a) => [a.id, a])),
@@ -141,7 +167,7 @@ export default function TransactionsPage() {
 
       {filteredData.length > 0 && (
         <>
-          <div className="flex gap-6 mb-4 text-sm">
+          <div className="flex gap-6 mb-4 text-sm tabular-nums">
             <span className="text-green-600 font-medium">
               Income: {formatAmount(totalIncome)}
             </span>

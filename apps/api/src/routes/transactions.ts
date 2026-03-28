@@ -59,6 +59,7 @@ export async function transactionRoutes(fastify: FastifyInstance) {
           payee: transactions.payee,
           memo: transactions.memo,
           amount: transactions.amount,
+          recurringId: transactions.recurringId,
           createdAt: transactions.createdAt,
           categoryName: categories.name,
         })

@@ -10,6 +10,7 @@ const navItems = [
   { href: "/accounts", label: "Accounts" },
   { href: "/transactions", label: "Transactions" },
   { href: "/categories", label: "Categories" },
+  { href: "/imports", label: "Imports" },
 ];
 
 export function Sidebar() {

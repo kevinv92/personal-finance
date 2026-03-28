@@ -17,6 +17,7 @@ import { transactionCategoryRoutes } from "./routes/transaction-categories.js";
 import { categoryRuleRoutes } from "./routes/category-rules.js";
 import { savedFilterRoutes } from "./routes/saved-filters.js";
 import { dashboardRoutes } from "./routes/dashboards.js";
+import { csvMapperRoutes } from "./routes/csv-mappers.js";
 import { importRoutes } from "./routes/import.js";
 
 const server = Fastify({ logger: true });
@@ -56,6 +57,7 @@ await server.register(transactionCategoryRoutes, {
 await server.register(categoryRuleRoutes, { prefix: "/api/category-rules" });
 await server.register(savedFilterRoutes, { prefix: "/api/saved-filters" });
 await server.register(dashboardRoutes, { prefix: "/api/dashboards" });
+await server.register(csvMapperRoutes, { prefix: "/api/csv-mappers" });
 await server.register(importRoutes, { prefix: "/api/import" });
 
 server.get("/api/debug/routes", async () => {

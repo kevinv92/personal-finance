@@ -4,7 +4,13 @@ import { randomUUID } from "crypto";
 import { eq } from "drizzle-orm";
 import { existsSync } from "fs";
 import { resolve } from "path";
-import { banks, accounts, categories, categoryRules } from "./schema/index.js";
+import {
+  banks,
+  accounts,
+  categories,
+  categoryRules,
+  csvMappers,
+} from "./schema/index.js";
 import { csvMapperPresets } from "../lib/csv-parser/index.js";
 import { SeedConfigSchema } from "./seed-config.schema.js";
 import type { SeedConfig } from "./seed-config.schema.js";
@@ -49,6 +55,39 @@ for (const preset of Object.values(csvMapperPresets)) {
       })
       .run();
     accountCount++;
+  }
+}
+
+// Seed CSV mappers from presets
+let mapperCount = 0;
+for (const preset of Object.values(csvMapperPresets)) {
+  const existing = db
+    .select()
+    .from(csvMappers)
+    .where(eq(csvMappers.csvSignature, preset.csvSignature))
+    .get();
+
+  if (!existing) {
+    db.insert(csvMappers)
+      .values({
+        id: randomUUID(),
+        name: preset.name,
+        bank: preset.bank,
+        accountType: preset.accountType,
+        csvSignature: preset.csvSignature,
+        metaLineStart: preset.metaLines.start,
+        metaLineEnd: preset.metaLines.end,
+        headerRow: preset.headerRow,
+        dataStartRow: preset.dataStartRow,
+        accountMetaLine: preset.accountMetaLine,
+        delimiter: preset.delimiter ?? ",",
+        columnMap: preset.columnMap,
+        dateFormat: preset.dateFormat ?? null,
+        invertAmount: preset.invertAmount ?? false,
+        createdAt: now,
+      })
+      .run();
+    mapperCount++;
   }
 }
 
@@ -141,5 +180,6 @@ if (existsSync(configPath)) {
 console.log("Seed complete:");
 console.log(`  ${bankCount.size} bank(s)`);
 console.log(`  ${accountCount} account(s)`);
+console.log(`  ${mapperCount} csv mapper(s)`);
 console.log(`  ${categoryCount} category(ies)`);
 console.log(`  ${ruleCount} category rule(s)`);

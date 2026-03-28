@@ -98,18 +98,26 @@ export async function importRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const data = await request.file();
-      if (!data) {
+      let csvContent = "";
+      let configJson = "";
+
+      const parts = request.parts();
+      for await (const part of parts) {
+        if (part.type === "file") {
+          const buf = await part.toBuffer();
+          csvContent = buf.toString("utf-8");
+        } else {
+          if (part.fieldname === "config") {
+            configJson = part.value as string;
+          }
+        }
+      }
+
+      if (!csvContent) {
         return reply.status(400).send({ message: "No file uploaded" });
       }
 
-      const content = await data.toBuffer();
-      const csvContent = content.toString("utf-8");
-
-      // Config comes as a field in the multipart form
-      const configField = (request.body as Record<string, { value: string }>)
-        ?.config;
-      if (!configField?.value) {
+      if (!configJson) {
         return reply
           .status(400)
           .send({ message: "Missing config field in form data" });
@@ -117,7 +125,7 @@ export async function importRoutes(fastify: FastifyInstance) {
 
       let config: CSVMapperConfig;
       try {
-        const raw = JSON.parse(configField.value);
+        const raw = JSON.parse(configJson);
         config = {
           name: raw.name ?? "Test",
           bank: raw.bank ?? "Unknown",

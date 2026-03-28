@@ -35,6 +35,24 @@ CREATE TABLE `category_rules` (
 	FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE TABLE `csv_mappers` (
+	`id` text PRIMARY KEY NOT NULL,
+	`name` text NOT NULL,
+	`bank` text NOT NULL,
+	`account_type` text NOT NULL,
+	`csv_signature` text NOT NULL,
+	`meta_line_start` integer NOT NULL,
+	`meta_line_end` integer NOT NULL,
+	`header_row` integer NOT NULL,
+	`data_start_row` integer NOT NULL,
+	`account_meta_line` integer NOT NULL,
+	`delimiter` text DEFAULT ',',
+	`column_map` text NOT NULL,
+	`date_format` text,
+	`invert_amount` integer DEFAULT false NOT NULL,
+	`created_at` text NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `dashboard_widgets` (
 	`id` text PRIMARY KEY NOT NULL,
 	`dashboard_id` text NOT NULL,

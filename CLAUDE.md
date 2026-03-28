@@ -66,7 +66,14 @@ pnpm db:generate   # generate Drizzle migration from schema changes
 pnpm db:migrate    # apply migrations
 pnpm db:seed       # seed without nuking (banks/accounts from presets, categories/rules from data/seed-config.ts)
 pnpm db:studio     # open Drizzle Studio
+pnpm mcp           # start MCP server (requires API running on port 3001)
 ```
+
+### MCP Server
+
+An MCP server is available for AI assistants to interact with the API. It exposes tools for listing transactions, categories, rules, creating rules, and applying categorisation. Requires the API to be running (`pnpm dev`).
+
+Configured in `.claude/settings.local.json` — Claude Code will auto-detect it.
 
 ### Testing
 
